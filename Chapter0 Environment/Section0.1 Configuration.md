@@ -5,6 +5,7 @@ Golang in Linux:
 2. download *.tar.gz from https://golang.org/dl/ and extract
 3. setting environment
 4. install vscode with go extention
+5. vscode notify gotools installation "Install All"
 
 ```bash
 # setting environment
@@ -16,12 +17,14 @@ export GOPATH=/home/user/project/go
 Golang in Ubuntu:
 1. `sudo apt install go`
 2. install vscdoe with go extension
+3. vscode notify gotools installation "Install All"
 
 Golang in windows:
 1. FQ
 2. download *.zip from https://golang.org/dl/
 3. install vscode with go extension
 4. go extension setting
+5. vscode notify gotools installation "Install All"
 
 ```json
 {
@@ -43,3 +46,7 @@ func main() {
 	fmt.Println("hello, world!")
 }
 ```
+
+- Run Code in terminal: `go run helloworld.go`
+- Run Code in VSCode: `Ctrl+F5`
+- Debug code: `F5`
