@@ -31,3 +31,15 @@ Golang in windows:
     "go.toolsGopath": "D:\\ProgrammingTools\\gotools",
 }
 ```
+
+example: test environment
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("hello, world!")
+}
+```
