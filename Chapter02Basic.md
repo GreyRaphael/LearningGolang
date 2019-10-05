@@ -905,3 +905,20 @@ string functions:
 -`strings.Join(s1 []string, sep string)`
 - `strings.Itoa(i int)`: int to string
 - `strings.Atoi(str string)(int, error)`: string to int
+
+example: trim
+
+```go
+package main
+
+import (
+	"fmt"
+	"strings"
+)
+
+func main() {
+	str := "abbacba"
+	fmt.Println(strings.Trim(str, "ab")) // a
+}
+```
+
