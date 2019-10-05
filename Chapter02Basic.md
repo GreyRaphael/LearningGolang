@@ -1426,3 +1426,134 @@ func main() {
 }
 ```
 
+`defer`用途:
+- 当函数返回时，执行defer语句。因此，可以用来做资源清理
+- 多个defer语句，按先进后出的方式执行
+- defer语句中的变量，在defer声明时就决定了。
+- 文件操作时候，关闭文件
+
+example: `defer`
+
+```go
+package main
+
+import "fmt"
+
+func testDefer() {
+	i := 0
+	defer fmt.Println(i) // 函数执行完毕，return之前执行defer
+	defer fmt.Println("second")
+	i = 10
+	fmt.Println(i)
+	return
+}
+
+func main() {
+	testDefer()
+}
+// 10
+// second
+// 0
+```
+
+```go
+package main
+
+import "fmt"
+
+func testDefer() {
+	for i := 0; i < 5; i++ {
+		defer fmt.Println(i)
+	}
+}
+
+func main() {
+	testDefer()
+}
+// 4
+// 3
+// 2
+// 1
+// 0
+```
+
+example: defer with file
+
+```go
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+)
+
+func readfile(fileName string) string {
+	f, err := os.Open(fileName)
+	if err!=nil{
+		return
+	}
+	defer f.Close()
+	data, _ := ioutil.ReadAll(f)
+	return string(data)
+}
+
+func main() {
+	data := readfile("data.txt")
+	fmt.Println(data)
+}
+```
+
+example: 其他用途
+> 锁释放，数据库断开连接
+
+```go
+func dosomething(){
+	mc.Lock()
+	defer mc.Unlock()
+	// ...
+}
+
+func dosomething(){
+	conn:=openDB()
+	defer conn.Close()
+	//...
+}
+
+// 匿名函数形式
+func dosomething(){
+	conn:=openDB()
+	defer func(){
+		if conn!=nil{
+			conn.Close()
+		}
+	}()
+	//...
+}
+```
+
+example: 匿名函数
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type two2one func(int, int) int
+
+func testAnonymous(op two2one, a int, b int) int {
+	return op(a, b)
+}
+
+func main() {
+	add := func(a, b int) int { return a + b }
+	sub := func(a, b int) int { return a - b }
+	add(10, 20)
+	fmt.Println(add(10, 20))                                                // 30
+	fmt.Println(sub(10, 20))                                                // -10
+	fmt.Println(testAnonymous(func(a, b int) int { return a * b }, 10, 20)) // 200
+	func(a, b int) int { return a / b }(20, 10)
+}
+```
