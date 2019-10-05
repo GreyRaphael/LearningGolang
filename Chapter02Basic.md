@@ -584,3 +584,68 @@ func main() {
 	fmt.Println(str) // 10%
 }
 ```
+
+example: string operation
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	// method1
+	str1 := "Alpha"
+	str2 := "Grey"
+	str3 := str1 + str2
+	fmt.Println(str3) // AlphaGrey
+	// method2
+	str4 := fmt.Sprintf("%s%s", str1, str2)
+	fmt.Println(str4, len(str4)) //AlphaGrey 9
+
+	// substring
+	fmt.Println(str4[5:]) // Grey
+}
+```
+
+example: string reverse
+
+```go
+package main
+
+import "fmt"
+
+func strReverse1(s string) string {
+	runes := []rune(s)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
+}
+
+func strReverse2(s string) string {
+	var result string
+	strLen := len(s)
+	for i := 0; i < strLen; i++ {
+		result += fmt.Sprintf("%c", s[strLen-i-1])
+	}
+	return result
+}
+
+func strReverse3(s string) string {
+	var result []byte
+	tmp := []byte(s)
+	strLen := len(s)
+	for i := 0; i < strLen; i++ {
+		result = append(result, tmp[strLen-i-1])
+	}
+	return string(result)
+}
+
+func main() {
+	str1 := "helloworld"
+	fmt.Println(strReverse1(str1))
+	fmt.Println(strReverse2(str1))
+	fmt.Println(strReverse3(str1))
+}
+```
+
