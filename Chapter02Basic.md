@@ -663,3 +663,86 @@ func main() {
   - 客户端决定访问服务器，导致笨重的客户端
   - 先访问Lookaside服务器，Lookaside服务器返回负载均衡策略，然后客户端根据策略访问对应服务
 
+exampe: prime number
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func isPrime(a int) bool {
+	for i := 2; i <= int(math.Sqrt(float64(a))); i++ {
+		if a%i == 0 {
+			return false
+		}
+	}
+	return a > 1
+}
+
+func main() {
+	count := 0
+	for i := 101; i < 200; i += 2 {
+		if isPrime(i) {
+			count++
+			fmt.Println(i)
+		}
+	}
+	fmt.Println("count=", count)
+}
+```
+
+example: 水仙花
+
+```go
+package main
+
+import "fmt"
+
+func isShui(a int) bool {
+	i := a % 10
+	j := a / 10 % 10
+	k := a / 100
+	if a == i*i*i+j*j*j+k*k*k {
+		return true
+	}
+	return false
+}
+
+func main() {
+	count := 0
+	for i := 100; i < 1000; i++ {
+		if isShui(i) {
+			count++
+			fmt.Println(i)
+		}
+	}
+	fmt.Println("count=", count)
+}
+```
+
+example: sum factorial
+
+```go
+package main
+
+import "fmt"
+
+func factorial(n int) int {
+	if n == 1 {
+		return 1
+	}
+	return n * factorial(n-1)
+}
+
+func main() {
+	N := 5
+	sum := 0
+	for i := 1; i < N; i++ {
+		sum += factorial(i)
+	}
+	fmt.Println(sum)
+}
+```
