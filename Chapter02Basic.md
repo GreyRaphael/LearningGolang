@@ -887,3 +887,21 @@ func main() {
 	fmt.Println(sumFactorial(4))
 }
 ```
+
+string functions:
+- `strings.HasPrefix(str, "http://")`
+- `strings.HasSuffix(str, "/")`
+- `strings.Index(str, "tp")`
+- `strings.LastIndex(str, "dex")`
+- `strings.Replace(str string, old string, new string, n int)`
+- `strings.Count(str string, substr string)int`
+- `strings.Repeat(str string, count int)string`
+- `strings.ToLower(str string)string`
+- `strings.ToUpper(str string)string`
+- `strings.TrimSpace(str string)`
+- `strings.Trim(str string, cut string)`, `strings.TrimLeft(str string, cut string)`, `strings.TrimRight(str string, cut string)`
+- `strings.Field(str string)`:返回str空格分隔的所有子串的slice
+- `strings.Split(str string, split string)`
+-`strings.Join(s1 []string, sep string)`
+- `strings.Itoa(i int)`: int to string
+- `strings.Atoi(str string)(int, error)`: string to int
