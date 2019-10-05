@@ -922,3 +922,52 @@ func main() {
 }
 ```
 
+time package:
+- `time.Time`类型表示时间
+- `time.Now()`
+- `time.Duration`表示纳秒
+
+```go
+now = time.Now()
+fmt.Printf("%02d/%02d%02d %02d:%02d:%02d", now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute(), now.Second())
+
+// some const
+const(
+	Nanosecond Duration =1
+	Microsecond = 1000*Nanosecond
+	Millisecond = 1000*Microsecond
+	Second      = 1000*Millisecond
+	Minute		= 60*Second
+	Hour		= 60*Minute
+)
+```
+
+```go
+// time format
+now := time.Now()
+fmt.Println(now.Format(“02/1/2006 15:04”))
+fmt.Println(now.Format(“2006/1/02 15:04”))
+fmt.Println(now.Format(“2006/1/02”))
+```
+
+example: count time
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func test() {
+	time.Sleep(3 * time.Second)
+}
+
+func main() {
+	start := time.Now().UnixNano()
+	test()
+	end := time.Now().UnixNano()
+	fmt.Println(end - start) // 3000847500
+}
+```
