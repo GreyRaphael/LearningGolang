@@ -755,6 +755,66 @@ func main() {
 }
 ```
 
+example: 水仙花 by string
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func isShui(s string) bool {
+	var resultA int
+	var resultB int
+
+	for i := 0; i < len(s); i++ {
+		num := int(s[i] - '0')
+		resultA += num * num * num
+		resultB = resultB*10 + num
+	}
+	return resultA == resultB
+
+}
+
+func main() {
+	var str string
+	fmt.Scanf("%s", &str)
+	fmt.Println(isShui(str))
+}
+```
+
+example: 水仙花 by strconv
+
+```go
+package main
+
+import (
+	"fmt"
+	"strconv"
+)
+
+func isShui(s string) bool {
+	var resultA int
+
+	for i := 0; i < len(s); i++ {
+		num := int(s[i] - '0')
+		resultA += num * num * num
+	}
+	resultB, err := strconv.Atoi(s)
+	if err != nil { // err是对象指针，所以用nil
+		fmt.Println("convert string error")
+	}
+	return resultA == resultB
+}
+
+func main() {
+	var str string
+	fmt.Scanf("%s", &str)
+	fmt.Println(isShui(str))
+}
+```
+
 example: sum factorial
 
 ```go
