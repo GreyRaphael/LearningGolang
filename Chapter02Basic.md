@@ -694,6 +694,41 @@ func main() {
 }
 ```
 
+example: interactive prime
+
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func isPrime(a int) bool {
+	for i := 2; i <= int(math.Sqrt(float64(a))); i++ {
+		if a%i == 0 {
+			return false
+		}
+	}
+	return a > 1
+}
+
+func main() {
+	var m int
+	var n int
+	fmt.Scanf("%d%d", &m, &n) // 输入时空格来分割
+
+	count := 0
+	for i := m; i < n; i += 2 {
+		if isPrime(i) {
+			count++
+			fmt.Println(i)
+		}
+	}
+	fmt.Println("count=", count)
+}
+```
+
 example: 水仙花
 
 ```go
@@ -705,10 +740,7 @@ func isShui(a int) bool {
 	i := a % 10
 	j := a / 10 % 10
 	k := a / 100
-	if a == i*i*i+j*j*j+k*k*k {
-		return true
-	}
-	return false
+	return a == i*i*i+j*j*j+k*k*k
 }
 
 func main() {
@@ -744,5 +776,54 @@ func main() {
 		sum += factorial(i)
 	}
 	fmt.Println(sum)
+}
+```
+
+example: sumfactorial func
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func sumFactorial(n int) int {
+	if n == 1 {
+		return 1
+	}
+	f := 1
+	for i := 1; i <= n; i++ {
+		f = f * i
+	}
+	return sumFactorial(n-1) + f
+}
+
+func main() {
+	fmt.Println(sumFactorial(4))
+}
+```
+
+example: sum factorial loop
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func sumFactorial(n int) int {
+	f := 1
+	sum := 0
+	for i := 1; i <= n; i++ {
+		f = f * i
+		sum += f
+	}
+	return sum
+}
+
+func main() {
+	fmt.Println(sumFactorial(4))
 }
 ```
