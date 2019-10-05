@@ -206,7 +206,7 @@ package main
 
 import (
 	"fmt"
-	_ "project1/calc"
+	_ "project1/calc" // calc仍然会被执行
 )
 
 func main() {
