@@ -332,6 +332,7 @@ func main() {
 ```
 
 值类型vs引用类型
+> 无论是值传递，还是引用传递，传递给函数的都是变量的副本，不过，值传递是值的拷贝。引用传递是地址的拷贝，一般来说，地址拷贝更为高效。而值拷贝取决于拷贝的对象大小，对象越大，则性能越低。
 - 值类型：变量直接存储值，内存通常在栈中分配。
   - 基本数据类型int、float、bool、string以及数组和struct。
 - 引用类型：变量存储的是一个地址，这个地址存储最终的值。内存通常在堆上分配。通过GC回收。
@@ -1263,3 +1264,165 @@ label1:
 	goto label1
 }
 ```
+
+函数形式
+
+```go
+func functionName() {
+
+}
+
+func functionName(a int, b int) {
+
+}
+
+func functionName(a int, b int) int {
+
+}
+
+func functionName(a int, b int) (int, int) {
+
+}
+
+func functionName(a, b int) (int, int) {
+
+}
+```
+
+golang函数特点:
+- 不支持重载，一个包不能有两个名字一样的函数
+- 函数是一等公民，函数也是一种类型，一个函数可以赋值给变量
+- 匿名函数
+- 多返回值
+
+example: 函数作为变量
+
+```go
+package main
+
+import "fmt"
+
+func add(a int, b int) int {
+	return a + b
+}
+
+func main() {
+	c := add
+	fmt.Println(c, c(10, 20)) //0x4b7410 30
+}
+```
+
+example: 函数类型调用
+
+```go
+package main
+
+import "fmt"
+
+// 定义一种类型，只是为了简写方便
+type two2one func(int, int) int
+
+// func operator(op func(int, int) int, a int, b int) int {
+func operator(op two2one, a int, b int) int {
+	return op(a, b)
+}
+
+func add(a, b int) int {
+	return a + b
+}
+
+func main() {
+	c := add
+	fmt.Println(operator(c, 100, 200)) // 300
+}
+```
+
+值传递vs引用传递
+> map、slice、chan、指针、interface默认以引用的方式传递
+
+example: 给返回值命名
+
+```go
+package main
+
+import "fmt"
+
+func sumAvg(a, b int) (sum, avg int) {
+	sum = a + b
+	avg = sum / 2
+	return
+}
+
+func main() {
+	sum, _ := sumAvg(10, 20)
+	fmt.Println(sum) // 30
+}
+```
+
+example: 可变参数
+
+```go
+package main
+
+import "fmt"
+
+// >=1个参数
+func multiSum(a int, arg ...int) int {
+	sum := a
+	// arg是一个slice
+	// 也可以 arg[index]来访问
+	for _, v := range arg {
+		sum += v
+	}
+	return sum
+}
+
+func main() {
+	fmt.Println(multiSum(10))
+	fmt.Println(multiSum(10, 20))
+	fmt.Println(multiSum(10, 20, 30))
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+// >=0个参数
+func multiSum(arg ...int) int {
+	sum := 0
+	for _, v := range arg {
+		sum += v
+	}
+	return sum
+}
+
+func main() {
+	fmt.Println(multiSum())
+	fmt.Println(multiSum(10))
+	fmt.Println(multiSum(10, 20))
+}
+```
+
+example: string concatenation
+
+```go
+package main
+
+import "fmt"
+
+func concat(s1, s2 string, arg ...string) string {
+	sum := s1 + s2
+	for _, v := range arg {
+		sum += v
+	}
+	return sum
+}
+
+func main() {
+	fmt.Println(concat("hello", "world"))
+	fmt.Println(concat("hello", "world", "China"))
+}
+```
+
