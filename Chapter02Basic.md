@@ -1097,7 +1097,7 @@ loop:
 }
 ```
 
-循环结构:
+循环结构 for:
 
 ```go
 for i := 0; i < N; i++ {
@@ -1105,7 +1105,7 @@ for i := 0; i < N; i++ {
 }
 
 for condition {
-
+	// 类似while循环
 }
 
 for true {
@@ -1117,8 +1117,43 @@ for {
 	// infinity loop
 }
 
+//enumerate
 for i, v:= range xxx{
 
+}
+```
+
+example: while loop
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	i := 0
+	for i < 3 {
+		fmt.Println(i)
+		i++
+	}
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	i := 0
+	for {
+		if i >= 3 {
+			break
+		}
+
+		fmt.Println(i)
+		i++
+	}
 }
 ```
 
@@ -1179,4 +1214,52 @@ func main() {
 // index:3,val= , len=1
 // index:4,val=中, len=3
 // index:7,val=国, len=3
+```
+
+`goto` & label
+
+example: goto loop
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+label1:
+	for i := 0; i < 4; i++ {
+		// label2:
+		for j := 0; j < 4; j++ {
+			if j == 2 {
+				continue label1
+			}
+			fmt.Println(i, j)
+		}
+	}
+}
+// 0 0
+// 0 1
+// 1 0
+// 1 1
+// 2 0
+// 2 1
+// 3 0
+// 3 1
+```
+
+example: goto loop
+
+```go
+package main
+
+func main() {
+	i := 0
+label1:
+	println(i)
+	i++
+	if i == 5 {
+		return
+	}
+	goto label1
+}
 ```
