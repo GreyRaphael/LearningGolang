@@ -894,7 +894,7 @@ string functions:
 - `strings.HasSuffix(str, "/")`
 - `strings.Index(str, "tp")`
 - `strings.LastIndex(str, "dex")`
-- `strings.Replace(str string, old string, new string, n int)`
+- `strings.Replace(str string, old string, new string, n int)`: n=-1替换所有
 - `strings.Count(str string, substr string)int`
 - `strings.Repeat(str string, count int)string`
 - `strings.ToLower(str string)string`
@@ -1555,5 +1555,224 @@ func main() {
 	fmt.Println(sub(10, 20))                                                // -10
 	fmt.Println(testAnonymous(func(a, b int) int { return a * b }, 10, 20)) // 200
 	func(a, b int) int { return a / b }(20, 10)
+}
+```
+
+example: 乘法表
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	for i := 1; i < 10; i++ {
+		for j := 1; j <= i; j++ {
+			fmt.Printf("%dx%d=%2d ", j, i, i*j)
+		}
+		fmt.Println()
+	}
+}
+// 1x1= 1 
+// 1x2= 2 2x2= 4 
+// 1x3= 3 2x3= 6 3x3= 9 
+// 1x4= 4 2x4= 8 3x4=12 4x4=16 
+// 1x5= 5 2x5=10 3x5=15 4x5=20 5x5=25 
+// 1x6= 6 2x6=12 3x6=18 4x6=24 5x6=30 6x6=36 
+// 1x7= 7 2x7=14 3x7=21 4x7=28 5x7=35 6x7=42 7x7=49 
+// 1x8= 8 2x8=16 3x8=24 4x8=32 5x8=40 6x8=48 7x8=56 8x8=64 
+// 1x9= 9 2x9=18 3x9=27 4x9=36 5x9=45 6x9=54 7x9=63 8x9=72 9x9=81 
+```
+
+example: 完数(perfect number)
+
+```go
+package main
+
+import "fmt"
+
+func isPerfect(n int) bool {
+	sum := 0
+	for i := 1; i < n; i++ {
+		if n%i == 0 {
+			sum += i
+		}
+	}
+	return sum == n
+}
+
+func main() {
+	for i := 2; i < 1000; i++ {
+		if isPerfect(i) {
+			fmt.Println(i)
+		}
+	}
+}
+// 6
+// 28
+// 496
+```
+
+example: 回文(palindrome)
+
+```go
+// 不能处理中文
+package main
+
+import "fmt"
+
+func isPalindrome(s string) bool {
+	strLen := len(s)
+	for i, j := 0, strLen-1; i <= strLen/2; i, j = i+1, j-1 {
+		if s[i] != s[j] {
+			return false
+		}
+	}
+	return true
+}
+
+func main() {
+	var s string
+	fmt.Scanf("%s", &s)
+	fmt.Println(isPalindrome(s))
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+func isPalindrome(s string) bool {
+	temp := []rune(s) // 4个字节存一个character, 解决中英字节差异
+	tempLen := len(temp)
+	for i, j := 0, tempLen-1; i <= tempLen/2; i, j = i+1, j-1 {
+		if temp[i] != temp[j] {
+			return false
+		}
+	}
+	return true
+}
+
+func main() {
+	s := "上海自来水来自海上"
+	fmt.Println(isPalindrome(s))
+}
+```
+
+example: read from stdin
+
+```go
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+)
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	result, _, _ := reader.ReadLine() // result is []byte
+	fmt.Println(string(result))
+}
+```
+
+example: 统计出其中英文字母、空格、数字和其它字符的个数
+
+```go
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"strings"
+)
+
+func count(article string) (ch, en, space, num, other int) {
+	// // for linux
+	// lines := strings.Split(article, "\n")
+	// for windows
+	lines := strings.Split(strings.Replace(article, "\r\n", "\n", -1), "\n")
+	for _, line := range lines {
+		for _, c := range line {
+			if c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' {
+				en++
+			} else if c >= '0' && c <= '9' {
+				num++
+			} else if c == ' ' {
+				space++
+			} else if c >= 19968 && c <= 40869 {
+				// Unicode汉字编码范围\u4E00-\u9FA5: 19968~40869
+				ch++
+			} else {
+				other++
+			}
+		}
+	}
+	return
+}
+
+func main() {
+	f, _ := os.Open("data.txt")
+	s, _ := ioutil.ReadAll(f)
+	ch, en, space, num, other := count(string(s))
+	fmt.Printf("ch=%d,en=%d, space=%d, num=%d, other=%d", ch, en, space, num, other)
+}
+```
+
+example:计算两个大数相加的和，这两个大数会超过int64的表示范围.
+> 所以只能用字符串来处理
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func overAdd(s1, s2 string) (result string) {
+	n1 := len(s1)
+	n2 := len(s2)
+	if n1 == 0 && n2 == 0 {
+		return "0"
+	}
+	// 对齐字符串
+	var strLen int
+	if n1 > n2 {
+		strLen = n1
+		fmtStr := fmt.Sprintf("%%0%ds", n1)
+		s2 = fmt.Sprintf(fmtStr, s2)
+	} else {
+		strLen = n2
+		fmtStr := fmt.Sprintf("%%0%ds", n2)
+		s1 = fmt.Sprintf(fmtStr, s1)
+	}
+	// 算术加法
+	var left int
+	for j := strLen - 1; j >= 0; j-- {
+		s1n := int(s1[j] - '0')
+		s2n := int(s2[j] - '0')
+		current := s1n + s2n + left
+		if current > 9 {
+			left = 1
+		} else {
+			left = 0
+		}
+		c := (current % 10) + '0'
+		result = fmt.Sprintf("%c%s", c, result)
+	}
+	if left == 1 {
+		result = fmt.Sprintf("1%s", result)
+	}
+	return
+}
+
+func main() {
+	// Uint64 Max: 18446744073709551615
+	a := "99999999999999999999"
+	b := "456"
+	fmt.Println(overAdd(a, b))
 }
 ```
