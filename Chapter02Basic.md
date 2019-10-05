@@ -1680,6 +1680,13 @@ func main() {
 
 example: 统计出其中英文字母、空格、数字和其它字符的个数
 
+```bash
+# data.txt
+I am Chinese, too.
+我是中国人，哈哈！
+123 456
+```
+
 ```go
 package main
 
@@ -1773,6 +1780,6 @@ func main() {
 	// Uint64 Max: 18446744073709551615
 	a := "99999999999999999999"
 	b := "456"
-	fmt.Println(overAdd(a, b))
+	fmt.Println(overAdd(a, b)) // 100000000000000000455
 }
 ```
