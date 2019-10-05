@@ -649,3 +649,17 @@ func main() {
 }
 ```
 
+输入网址发生的过程:
+- 输入网址，解析出IP：如果浏览器有缓存，直接获取IP;没有缓存访问DNS服务器;
+- 根据IP经历TCP三次握手建立连接，发送数据包
+- 一般远端的Nginx接受到包，解析协议，拿到URL，然后Nginx Proxy转发给后台的服务器
+- 如果有缓存，直接返回缓存；没有缓存，访问redis, 数据库来渲染HTML，HTML给Nginx Proxy
+- Nginx Proxy返回浏览器
+- 浏览器渲染成页面
+
+负载均衡方式[load balence](https://www.jishuwen.com/d/2tL2):
+- 代理: proxy
+- RPC
+  - 客户端决定访问服务器，导致笨重的客户端
+  - 先访问Lookaside服务器，Lookaside服务器返回负载均衡策略，然后客户端根据策略访问对应服务
+
