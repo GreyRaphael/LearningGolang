@@ -971,3 +971,212 @@ func main() {
 	fmt.Println(end - start) // 3000847500
 }
 ```
+
+流程控制:
+- 顺序结构
+- 判断结构
+- 循环结构
+
+判断结构:
+
+```go
+// if-else
+if condition1 {
+
+}
+
+if condition1 {
+
+} else{
+
+}
+
+if condition1 {
+
+} else if condition2 {
+
+} else {
+
+}
+```
+
+```go
+// switch-case, 不需要break
+switch value {
+	case 0:
+	case 1:
+	default:
+}
+
+// fallthrough
+switch value {
+	case 0:
+		fmt.PrintLn("hello")
+		fallthrough // 往下走一层
+	case 1:
+	case 2:
+	default:
+}
+
+switch value{
+	case 0, 1:
+	case 2:
+	default:
+}
+
+switch {
+	condition1:
+	condition2:
+	condition3:
+	default:
+}
+
+switch i:=xxx {
+	condition1:
+	condition2:
+	condition3:
+	default
+}
+```
+
+example: `fallthrough`
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	a := 0
+	switch a {
+	case 0:
+		fallthrough // 往下走一层，可以尝试有无fallthrough
+	case 1:
+		fmt.Println("level1")
+		fallthrough
+	case 2:
+		fmt.Println("level2")
+	case 3:
+		fmt.Println("level3")
+	default:
+		fmt.Println("default")
+	}
+}
+```
+
+example: guess number
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
+func main() {
+	rand.Seed(time.Now().Unix())
+	N := rand.Intn(10)
+	var a int
+loop:
+	for {
+		fmt.Scanf("%d\n", &a) // \n是为了回车符号导致打印两次
+		switch {
+		case a == N:
+			fmt.Println("bingo")
+			break loop // break loop from swith-case, 或者使用flag
+		case a > N:
+			fmt.Println("too big")
+		case a < N:
+			fmt.Println("too small")
+		}
+	}
+}
+```
+
+循环结构:
+
+```go
+for i := 0; i < N; i++ {
+	
+}
+
+for condition {
+
+}
+
+for true {
+
+}
+
+// 等价于
+for {
+	// infinity loop
+}
+
+for i, v:= range xxx{
+
+}
+```
+
+example: print star
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	for i := 0; i < 5; i++ {
+		for j := 0; j <= i; j++ {
+			fmt.Printf("*")
+		}
+		fmt.Println()
+	}
+}
+// *
+// **
+// ***
+// ****
+// *****
+```
+
+example: iterate array
+> 还可以遍历slice, map, chan, string
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	a := []int{1, 2, 3, 4, 5}
+	for i, v := range a {
+		fmt.Printf("index=%d, value=%d\n", i, v)
+	}
+}
+```
+
+example: enumerate string utf8
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	str := "hi, 中国"
+	for i, v := range str {
+		fmt.Printf("index:%d,val=%c, len=%d\n", i, v, len([]byte(string(v))))
+	}
+}
+// index:0,val=h, len=1
+// index:1,val=i, len=1
+// index:2,val=,, len=1
+// index:3,val= , len=1
+// index:4,val=中, len=3
+// index:7,val=国, len=3
+```
