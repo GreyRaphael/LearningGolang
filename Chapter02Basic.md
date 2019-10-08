@@ -1783,6 +1783,7 @@ func overAdd(s1, s2 string) (result string) {
 		c := (current % 10) + '0'
 		result = fmt.Sprintf("%c%s", c, result)
 	}
+	// 如果最高位存在进位
 	if left == 1 {
 		result = fmt.Sprintf("1%s", result)
 	}
