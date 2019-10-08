@@ -8,7 +8,7 @@
 
 keywords:
 - import, package, 
-- switch, select, case, if, else, default, fallthrough
+- switch, select, case, default, fallthrough, if, else
 - for, continue, break, range, goto
 - func, return, defer, var, type, const, struct, map
 - interface 
@@ -45,9 +45,17 @@ situation1
 // add.go
 package calc
 
-// 必须要这么写，不能将声明与初始化分开
 var Name string = "Grey"
 var age int = 36
+
+// // 因为是全局变量，如下两种写法错误:
+// Name:="Grey"
+// age:=36
+
+// var Name string
+// var age int
+// Name = "Grey"
+// age = 36
 ```
 
 ```go
@@ -514,7 +522,7 @@ func main() {
 		fmt.Println(rand.Int31(), rand.Int31n(10), rand.Float32())
 	}
 }
-// 最终结果是一样的，需要进一步随机
+// 打印结果每次都相同，需要随机种子
 ```
 
 ```go
@@ -536,10 +544,6 @@ func main() {
 	}
 }
 ```
-
-负载均衡策略:
-- LVS: Nginx
-- RPC
 
 example: byte vs string
 
@@ -616,7 +620,8 @@ package main
 import "fmt"
 
 func strReverse1(s string) string {
-	runes := []rune(s)
+	// recommended
+	runes := []rune(s) // 将每个字符用4个字节来存
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		runes[i], runes[j] = runes[j], runes[i]
 	}
@@ -643,10 +648,18 @@ func strReverse3(s string) string {
 }
 
 func main() {
-	str1 := "helloworld"
+	str1 := "hello"
+	fmt.Println(len(str1)) // 4
 	fmt.Println(strReverse1(str1))
 	fmt.Println(strReverse2(str1))
 	fmt.Println(strReverse3(str1))
+	// 三个方法对英文都适用，只有第一种方式适用于utf8
+	str2 := "Hi中国人"
+	fmt.Println(len(str2)) //11
+	fmt.Println(strReverse1(str2))
+	fmt.Println(strReverse2(str2))
+	fmt.Println(strReverse3(str2))
+
 }
 ```
 
@@ -658,8 +671,8 @@ func main() {
 - Nginx Proxy返回浏览器
 - 浏览器渲染成页面
 
-负载均衡方式[load balence](https://www.jishuwen.com/d/2tL2):
-- 代理: proxy
+负载均衡策略: [load balence](https://www.jishuwen.com/d/2tL2):
+- 代理(proxy): Nginx
 - RPC
   - 客户端决定访问服务器，导致笨重的客户端
   - 先访问Lookaside服务器，Lookaside服务器返回负载均衡策略，然后客户端根据策略访问对应服务
@@ -919,7 +932,7 @@ import (
 
 func main() {
 	str := "abbacba"
-	fmt.Println(strings.Trim(str, "ab")) // a
+	fmt.Println(strings.Trim(str, "ab")) // c
 }
 ```
 
