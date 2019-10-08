@@ -1,23 +1,22 @@
 # Golang Introduction
 
 - [Golang Introduction](#golang-introduction)
-  - [Go Features](#go-features)
-  - [Go package](#go-package)
+	- [Go Features](#go-features)
+	- [Go package](#go-package)
 
 ## Go Features
 
 1. gc
    1. 只需要new分配内存，不需要释放
-   2. 内存自动回收，再也不需要开发人员管理内存
-2. 天然并发
+   1. 内存自动回收，再也不需要开发人员管理内存
+1. 天然并发
    1. 从语言层面支持并发，非常简单
-   2. goroute，轻量级线程(本质是协程映射到物理线程上,但比操作系统的线程轻量)，创建成千上万个goroute成为可能(而创建成千上万个线程，程序会被OS kill)，能够充分利用多核CPU
-   3. 基于CSP（Communicating Sequential Process）模型实现
-3. channel
-   1. 类似Unix/Linux下的pipe
-   2. 多个goroutine之间通过channel进行通信
-   3. channel支持任何数据类型
-4. 多返回值
+   1. goroutine，轻量级线程(本质是协程映射到物理线程上,但比操作系统的线程轻量)，创建成千上万个goroutine成为可能(而创建成千上万个线程，程序会被OS kill)，能够充分利用多核CPU
+   1. 基于CSP（Communicating Sequential Process）模型实现
+1. channel
+   1. 多个goroutine之间通过channel进行通信, channel类似Unix/Linux下的pipe
+   1. channel支持任何数据类型
+1. 多返回值
 
 example: simple example
 
@@ -35,7 +34,7 @@ func add(a int, b int) int {
 func main() {
 	var s int
 	s = add(100, 10)
-	// 如果变量定义不使用，不同通过编译
+	// 如果变量定义不使用，不能通过编译
 	fmt.Println("Result=", s)
 }
 ```
@@ -112,7 +111,6 @@ import (
 )
 
 func main() {
-	// 并发打印
 	for i := 0; i < 20; i++ {
 		go testInfLoop(i)
 	}
