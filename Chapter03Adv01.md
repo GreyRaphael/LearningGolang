@@ -7,6 +7,7 @@
   - [array & slice](#array--slice)
   - [string](#string)
   - [sort](#sort)
+  - [map](#map)
 
 ## builtin
 
@@ -756,3 +757,136 @@ func main() {
 }
 ```
 
+## map
+
+map: key-value数据结构
+> 声明是不会分配内存的，初始化需要make  
+> `var xxx map[string] int`
+
+example: value又是一个map的嵌套结构
+> `var xxx map[string] map[string] int`
+
+example: map CRUD
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	// method1
+	d1 := map[string]int{"id": 1, "age": 18}
+	fmt.Printf("%#v\n", d1)
+	// method2
+	d2 := make(map[string]int, 10)
+	// insert & update
+	d2["id"] = 2
+	d2["age"] = 16
+	fmt.Printf("%#v\n", d2)
+
+	// find
+	v, ok := d2["age"]
+	fmt.Println(v, ok) // 16 true
+
+	// iter
+	for k, v := range d2 {
+		fmt.Println(k, v)
+	}
+
+	fmt.Println(len(d2)) // 2
+
+	// delete
+	delete(d2, "age")
+	fmt.Printf("%#v\n", d2)
+}
+```
+
+trick: 删除所有key-value
+1. 循环每一个都delete
+2. 重新make, 换指向
+
+example: 两层dict
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func main() {
+	d1 := map[string]map[string]int{"grade": {"id": 1, "age": 12}}
+	fmt.Printf("%#v\n", d1) // map[string]map[string]int{"grade":map[string]int{"age":12, "id":1}}
+	d1["score"] = make(map[string]int)
+	d1["score"]["math"] = 100
+	d1["score"]["english"] = 99
+	fmt.Printf("%#v\n", d1) // map[string]map[string]int{"grade":map[string]int{"age":12, "id":1}, "score":map[string]int{"english":99, "math":100}}
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+func check(a map[string]map[string]string) {
+	_, ok := a["root"]
+	if !ok {
+		a["root"] = make(map[string]string)
+	}
+
+	a["root"]["password"] = "toor"
+	a["root"]["nickname"] = "grey"
+}
+
+func main() {
+	db := map[string]map[string]string{}
+	check(db)
+	fmt.Printf("%#v\n", db) //map[string]map[string]string{"root":map[string]string{"nickname":"grey", "password":"toor"}}
+}
+```
+
+example: map 是引用类型
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func modifyDict(d map[string]int) {
+	d["age"] = 55
+}
+
+func main() {
+	d1 := map[string]int{"age": 18, "id": 10}
+	modifyDict(d1)
+	fmt.Printf("%#v\n", d1)
+}
+```
+
+example: slice of map
+
+```go
+items:=make([]map[int]int, 5)
+
+if items[0]==nil{
+    items[0]=make(map[int]int)
+}
+items[0][666]=999
+
+for i := 0; i < 5; i++ {
+    items[i]=make(map[int]int)
+}
+```
+
+> map本质上是无序的， 所有每次打印结果都不同
+example: map有序打印
+1. 先获取所有key，把key进行排序
+1. 按照排序好的key，进行遍历
+
+example: map反转
+- 初始化另外一个map，把key、value互换即可
