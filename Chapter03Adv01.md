@@ -8,6 +8,8 @@
   - [string](#string)
   - [sort](#sort)
   - [map](#map)
+  - [3rd package](#3rd-package)
+  - [sync](#sync)
 
 ## builtin
 
@@ -890,3 +892,163 @@ example: map有序打印
 
 example: map反转
 - 初始化另外一个map，把key、value互换即可
+
+## 3rd package
+
+example: `go get -u github.com/asmcos/requests`
+
+## sync
+
+检测多个goroutine之间是否发生线程竞争:
+1. go build -race main/main.go
+1. ./main.exe
+
+
+example: 互斥锁(Mutex)
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+)
+
+var lock sync.Mutex
+
+func test(b map[string]int) {
+	lock.Lock()
+	b["age"] = rand.Intn(100)
+	lock.Unlock()
+}
+
+func main() {
+	a := map[string]int{"id": 10, "age": 11}
+	for i := 0; i < 2; i++ {
+		go test(a)
+	}
+
+	// 防止与主routine发生争抢
+	lock.Lock()
+	fmt.Println(a)
+	lock.Unlock()
+}
+```
+
+example: 读写锁(RWMutex)
+> 读操作的时候可以多个线程; 写操作的时候仍然是互斥锁  
+> 应用场景: 读多写少，游戏
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+var lock sync.RWMutex
+
+// atomic number
+var rcount int32
+var wcount int32
+
+func readOp(b map[string]int) {
+	lock.RLock()
+	fmt.Println(b["age"])
+	lock.RUnlock()
+	atomic.AddInt32(&rcount, 1)
+}
+
+func writeOp(b map[string]int) {
+	lock.Lock()
+	b["age"] = rand.Intn(100)
+	lock.Unlock()
+	atomic.AddInt32(&wcount, 1)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func main() {
+	a := map[string]int{"id": 10, "age": 11}
+
+	// 2个线程写
+	for i := 0; i < 2; i++ {
+		go writeOp(a)
+	}
+	// 100个线程读
+	for j := 0; j < 100; j++ {
+		go readOp(a)
+	}
+
+	time.Sleep(5 * time.Second)
+	fmt.Println(atomic.LoadInt32(&rcount))
+	fmt.Println(atomic.LoadInt32(&wcount))
+}
+```
+
+example: 比较读写锁与互斥锁性能
+> 将如下的读写锁换成互斥锁，对比rcount，读写锁性能是互斥锁的100倍  
+> 100倍原因: 互斥锁每次只能一个协程读操作，然而对于RLock可以同时100协程的读操作
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"sync/atomic"
+	"time"
+)
+
+var lock sync.RWMutex
+
+// atomic number
+var rcount int32
+var wcount int32
+
+func readOp(b map[string]int) {
+	for {
+		lock.RLock()
+		time.Sleep(time.Millisecond)
+		lock.RUnlock()
+		atomic.AddInt32(&rcount, 1)
+	}
+}
+
+func writeOp(b map[string]int) {
+	lock.Lock()
+	b["age"] = rand.Intn(100)
+	time.Sleep(10 * time.Millisecond)
+	lock.Unlock()
+	atomic.AddInt32(&wcount, 1)
+}
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func main() {
+	a := map[string]int{"id": 10, "age": 11}
+
+	// 2个线程写
+	for i := 0; i < 2; i++ {
+		go writeOp(a)
+	}
+	// 100个线程读
+	for j := 0; j < 100; j++ {
+		go readOp(a)
+	}
+
+	time.Sleep(5 * time.Second)
+	fmt.Println(atomic.LoadInt32(&rcount))
+	fmt.Println(atomic.LoadInt32(&wcount))
+}
+```
