@@ -5,6 +5,7 @@
   - [Recursive](#recursive)
   - [Closure](#closure)
   - [array & slice](#array--slice)
+  - [string](#string)
 
 ## builtin
 
@@ -573,7 +574,8 @@ func main() {
 	b := a[1:]
 	fmt.Printf("%p\n", &a)    // 0xc000084060
 	fmt.Printf("%p\n", &a[0]) // 0xc000084060
-	fmt.Printf("%p\n", &a[1]) // 0xc00000a2d8
+    fmt.Printf("%p\n", &a[1]) // 0xc00000a2d8
+    // slice可以简单理解为指针,存的地址，所以直接%p
 	fmt.Printf("%p\n", b)     // 0xc00000a2d8
 }
 ```
@@ -613,3 +615,110 @@ func main() {
 	fmt.Printf("%#v\n", a) //[5]int{111, 111, 3, 4, 0}
 }
 ```
+
+创建slice的方式:
+- 通过一个array的引用`[start: end]`来创建
+- `make`来创建，底层本质是指向array的引用
+- 初始化的时候就创建，然后`append`: `var a:=[]int{1, 2, 3}`
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	a := []int{1, 2, 3}
+	b := []int{4, 5, 6}
+	c := append(a, b...)
+	fmt.Println(c) // [1 2 3 4 5 6]
+	d := append(c, 100)
+	fmt.Println(d) //[1 2 3 4 5 6 100]
+}
+```
+
+example: `append`导致capacity扩容 
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	a := [5]int{1, 2, 3, 4, 5}
+	s := a[1:4]
+	fmt.Println(len(s), cap(s))             // 3 4
+	fmt.Printf("s=%p, a[1]=%p\n", s, &a[1]) // s=0xc000080068, a[1]=0xc000080068
+
+	s = append(s, 10)
+	fmt.Printf("s=%p, a[1]=%p\n", s, &a[1]) // s=0xc000080068, a[1]=0xc000080068
+
+	s = append(s, 10)
+	// 已经填满了，所以要重新开辟内存
+	fmt.Printf("s=%p, a[1]=%p\n", s, &a[1]) // s=0xc000082140, a[1]=0xc000080068
+	fmt.Println(len(s), cap(s))             // 5 8
+}
+```
+
+example: slice copy
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	a := []int{1, 2, 3, 4, 5}
+	b := make([]int, 10)
+	c := make([]int, 3)
+	copy(b, a)
+	fmt.Println(a, b) // [1 2 3 4 5] [1 2 3 4 5 0 0 0 0 0]
+
+	copy(c, a)
+	fmt.Println(a, c) // [1 2 3 4 5] [1 2 3]
+
+	a = append(a, 11, 22)
+	fmt.Println(a) // [1 2 3 4 5 11 22]
+}
+```
+
+## string
+
+string底层布局: string底层就是一个byte的数组(不可修改)，因此，也可以进行切片操作;
+> <img src="Res03/string01.png" width=500>
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	s := "hi, 中国"
+	fmt.Println(s[:5]) // hi, �
+	sr := []rune(s)
+	fmt.Println(string(sr[:5])) //hi, 中
+}
+```
+
+example: 强行修改string
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	s1 := "hi,china"
+	s := []byte(s1)
+	s[1] = 'a'
+	s1 = string(s)
+	fmt.Println(s1) //ha,china
+
+	s2 := "hi,中国"
+	ss := []rune(s2)
+	ss[3] = '美'
+	s2 = string(ss)
+	fmt.Println(s2) // hi,美国
+}
+```
+
+
