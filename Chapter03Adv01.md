@@ -6,6 +6,7 @@
   - [Closure](#closure)
   - [array & slice](#array--slice)
   - [string](#string)
+  - [sort](#sort)
 
 ## builtin
 
@@ -721,4 +722,37 @@ func main() {
 }
 ```
 
+## sort
+
+[some functions](https://go-zh.org/pkg/sort/):
+- `sort.Ints(a []int)`: sort integer
+- `sort.Float64s`
+- `sort.Strings`
+- `sort.SearchInts(a []int, b int)`: find b in sorted a
+- `sort.SearchFloats(a []float64, b float64)`
+- `sort.SearchStrings(a []string, b string)`
+
+example: sort slice
+
+```go
+package main
+
+import (
+	"fmt"
+	"sort"
+)
+
+func main() {
+	s1 := []int{12, 1, 3, 11}
+	sort.Ints(s1)
+	fmt.Println(s1)
+
+	i := sort.SearchInts(s1, 3)
+	fmt.Println(i) // 1
+
+	// reverse order
+	sort.Sort(sort.Reverse(sort.IntSlice(s1)))
+	fmt.Println(s1)
+}
+```
 
