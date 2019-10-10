@@ -1,15 +1,15 @@
 # Golang Advanced
 
 - [Golang Advanced](#golang-advanced)
-  - [builtin](#builtin)
-  - [Recursive](#recursive)
-  - [Closure](#closure)
-  - [array & slice](#array--slice)
-  - [string](#string)
-  - [sort](#sort)
-  - [map](#map)
-  - [3rd package](#3rd-package)
-  - [sync](#sync)
+	- [builtin](#builtin)
+	- [Recursive](#recursive)
+	- [Closure](#closure)
+	- [array & slice](#array--slice)
+	- [string](#string)
+	- [sort](#sort)
+	- [map](#map)
+	- [3rd package](#3rd-package)
+	- [sync](#sync)
 
 ## builtin
 
@@ -18,7 +18,7 @@
 - `len`: 求string, array, slice, map, channle长度
 - `new`: 给值类型数据(int, struct,...)分配内存，返回指针
 - `make`: 给引用类型数据(chan, map, slice)分配内存
-- `append`: 追加元素到array, slice, ...
+- `append`: 追加元素到slice
 - `panic`, `recover`: 错误处理
 
 example: `new`
@@ -119,16 +119,16 @@ func main() {
 
 	// method2.1
 	p3 := &Person{}
-    fmt.Printf("%#v\n", p3) // &main.Person{name:"", age:0}
-    // 可以用指针直接访问成员变量
+	fmt.Printf("%#v\n", p3) // &main.Person{name:"", age:0}
+	// 可以用指针直接访问成员变量
 	p3.age = 11
 	fmt.Printf("%#v\n", p3) // &main.Person{name:"", age:11}
 
-    // method2.2
+	// method2.2
 	p4 := new(Person)       // p4 type is *Person
 	fmt.Printf("%#v\n", p4) // &main.Person{name:"", age:0}
-    // 可以用指针直接访问成员变量
-    p4.age = 11
+	// 可以用指针直接访问成员变量
+	p4.age = 11
 	fmt.Printf("%#v\n", p4) // &main.Person{name:"", age:11}
 }
 ```
@@ -290,8 +290,8 @@ func adder() func(int) int {
 }
 
 func main() {
-    f := adder()
-    // 闭包本质就是将x与f绑定在一起, 相当于容纳了x和f的class
+	f := adder()
+	// 闭包本质就是将x与f绑定在一起, 相当于容纳了x和f的class
 	fmt.Println(f(10)) // 10
 	fmt.Println(f(20)) // 30
 	fmt.Println(f(30)) // 60
@@ -511,8 +511,8 @@ import "fmt"
 func main() {
 	x := []int{2, 3, 5, 7, 11}
 	y := x[1:3]
-    fmt.Println(x, len(x), cap(x)) // [2 3 5 7 11] 5 5
-    // 切片的容量是从它的第一个元素开始数，到其底层数组元素末尾的个数。
+	fmt.Println(x, len(x), cap(x)) // [2 3 5 7 11] 5 5
+	// 切片的容量是从它的第一个元素开始数，到其底层数组元素末尾的个数。
 	fmt.Println(y, len(y), cap(y)) // [3 5] 2 4
 }
 ```
@@ -549,7 +549,7 @@ func makeSlice(s slice, len int, cap int) slice {
 }
 
 func modifySlice(s slice) {
-    // 虽然slice本身是值类型，但里面有指针，所以可以改
+	// 虽然slice本身是值类型，但里面有指针，所以可以改
 	s.ptr[1] = 111
 }
 
@@ -578,8 +578,8 @@ func main() {
 	b := a[1:]
 	fmt.Printf("%p\n", &a)    // 0xc000084060
 	fmt.Printf("%p\n", &a[0]) // 0xc000084060
-    fmt.Printf("%p\n", &a[1]) // 0xc00000a2d8
-    // slice可以简单理解为指针,存的地址，所以直接%p
+	fmt.Printf("%p\n", &a[1]) // 0xc00000a2d8
+	// slice可以简单理解为指针,存的地址，所以直接%p
 	fmt.Printf("%p\n", b)     // 0xc00000a2d8
 }
 ```
@@ -748,7 +748,7 @@ import (
 func main() {
 	s1 := []int{12, 1, 3, 11}
 	sort.Ints(s1)
-	fmt.Println(s1)
+	fmt.Println(s1) // [1 3 11 12]
 
 	i := sort.SearchInts(s1, 3)
 	fmt.Println(i) // 1
