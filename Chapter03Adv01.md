@@ -842,6 +842,56 @@ func main() {
 }
 ```
 
+example: quick sort
+> core: 对于一个元素，左边的分块都大于它，右边的分块都小于它；进而确定该元素的在序列中的index; 递归下去  
+> <img src="Res03/quick_sort.gif">
+
+```go
+package main
+
+import "fmt"
+
+// quick sort
+func qsort(a []int, left, right int) {
+	if left >= right {
+		return
+	}
+
+	// 确定val的位置k，并以k为界分两边
+	val := a[left]
+	k := left
+	for i := left + 1; i <= right; i++ {
+		if a[i] < val {
+			a[k] = a[i]
+			a[i] = a[k+1]
+			k++
+		}
+		fmt.Println(a)
+	}
+	a[k] = val
+
+	// fmt.Println("Begin left")
+	qsort(a, left, k-1)
+	// fmt.Println("End left")
+
+	// fmt.Println("Begin right")
+	qsort(a, k+1, right)
+	// fmt.Println("End right")
+}
+
+func main() {
+	arr := []int{3, 11, 12, 2, 1}
+	qsort(arr, 0, len(arr)-1)
+	fmt.Printf("%#v\n", arr) // []int{1, 2, 3, 11, 12}
+}
+```
+
+example: merge sort(归并排序)
+> <img src="Res03/merge_sort.gif">
+
+example: sort summary
+> ![](Res03/sort_summary.png)
+
 ## map
 
 map: key-value数据结构
