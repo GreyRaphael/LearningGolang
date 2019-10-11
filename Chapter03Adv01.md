@@ -13,6 +13,7 @@
 	- [struct](#struct)
 		- [linked-list](#linked-list)
 		- [doubly linked list](#doubly-linked-list)
+		- [tree](#tree)
 
 ## builtin
 
@@ -1592,3 +1593,61 @@ type Student struct {
 }
 ```
 
+### tree
+
+如果每个节点有两个指针分别用来指向左子树和右子树，我们把这样的结构叫做二叉树
+
+```go
+type Student struct {
+	Name string
+	left* Student
+	right* Student
+}
+```
+
+example: DFS+前序遍历
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name  string
+	Age   int
+	left  *Student
+	right *Student
+}
+
+func DFS(root *Student) {
+	// 递归
+	// 空树
+	if root == nil {
+		return
+	}
+	//非空树
+	fmt.Printf("%#v\n", root)
+	DFS(root.left)
+	DFS(root.right)
+}
+
+func BFS(root *Student) {
+	// 空树
+	if root == nil {
+		return
+	}
+	//非空树 采用队列
+}
+
+func main() {
+	root := &Student{Name: "alpha", Age: 11}
+	left1 := &Student{Name: "beta", Age: 22}
+	right1 := &Student{Name: "gamma", Age: 33}
+	root.left = left1
+	root.right = right1
+	fmt.Printf("%#v\n\n", root)
+	left2 := &Student{Name: "betaL1", Age: 23}
+	left1.left = left2
+	DFS(root)
+}
+```
