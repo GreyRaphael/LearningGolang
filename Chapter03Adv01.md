@@ -10,6 +10,7 @@
 	- [map](#map)
 	- [3rd package](#3rd-package)
 	- [sync](#sync)
+	- [struct](#struct)
 
 ## builtin
 
@@ -1185,3 +1186,103 @@ func main() {
 	fmt.Println(atomic.LoadInt32(&wcount))
 }
 ```
+
+## struct
+
+struct:
+- Go语言没有class类型，只有struct类型
+- 用来自定义复杂数据结构
+- struct里面可以包含多个字段（属性）
+- struct类型可以定义方法，注意和函数的区分
+- struct类型是值类型
+- struct类型可以嵌套
+
+```go
+type Course struct{
+	Id int
+	Name string
+}
+
+type Grade struct{
+	Id int
+	Name string
+	course Course
+}
+```
+
+example: struct定义的4种方式
+
+```go
+package main
+
+import "fmt"
+
+type Person struct {
+	name string
+	age  int
+}
+
+func main() {
+	// method1.1
+	var p1 Person
+	fmt.Printf("%#v\n", p1) // main.Person{name:"", age:0}
+	p1.age = 11
+	fmt.Printf("%#v\n", p1) //main.Person{name:"", age:11}
+
+	// method1.2
+	p2 := Person{}
+	fmt.Printf("%#v\n", p2) // main.Person{name:"", age:0}
+	p2.age = 11
+	fmt.Printf("%#v\n", p2) //main.Person{name:"", age:11}
+
+	// method1.1等价于method1.2
+	// method2.1等价于method2.2
+
+	// 下面两种都是使用指针，与c++不同的是，该指针对应的内存不用释放
+	// method2.1
+	p3 := &Person{}
+	fmt.Printf("%#v\n", p3) // &main.Person{name:"", age:0}
+	// 可以用指针直接访问成员变量
+	p3.age = 11
+	// 或者用对应的结构体访问
+	(*p3).name="Grey"
+	fmt.Printf("%#v\n", p3) // &main.Person{name:"Grey", age:11}
+
+	// method2.2
+	p4 := new(Person)       // p4 type is *Person
+	fmt.Printf("%#v\n", p4) // &main.Person{name:"", age:0}
+	// 可以用指针直接访问成员变量
+	p4.age = 11
+	fmt.Printf("%#v\n", p4) // &main.Person{name:"", age:11}
+}
+```
+
+example: struct中的所有字段在内存是连续的
+> ![](Res03/struct01.png)
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	// golang默认int是int64
+	Name  string
+	Age   int32
+	Score int32
+}
+
+func main() {
+	s1 := Student{Name: "Grey", Age: 10, Score: 88}
+	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%p\n", &s1.Name)
+	fmt.Printf("%p\n", &s1.Age)   // 0xc0000044b0
+	fmt.Printf("%p\n", &s1.Score) //0xc0000044b4
+
+	// second method for struct initialization
+	s2 := Student{}
+	s2.Age = 16
+	fmt.Printf("%#v\n", s2)
+}
+```
+
