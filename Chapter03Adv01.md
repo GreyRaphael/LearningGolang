@@ -759,6 +759,89 @@ func main() {
 }
 ```
 
+example: bubble sort
+> <img src="Res03/bubble_sort.gif" width=400>
+
+```go
+package main
+
+import "fmt"
+
+// bubble sort
+func bsort(a []int) {
+	N := len(a)
+	for i := 0; i < N-1; i++ {
+		for j := 0; j < N-1-i; j++ {
+			if a[j] > a[j+1] {
+				a[j], a[j+1] = a[j+1], a[j]
+			}
+		}
+	}
+}
+
+func main() {
+	arr := []int{1, 11, 3, 12, 2}
+	bsort(arr)
+	fmt.Printf("%#v\n", arr) // []int{1, 2, 3, 11, 12}
+}
+```
+
+example: selection sort
+> <img src="Res03/selection_sort.gif" width=400>
+
+```go
+package main
+
+import "fmt"
+
+// select sort
+func ssort(a []int) {
+	N := len(a)
+	for i := 0; i < N-1; i++ {
+		minIdx := i
+		for j := i + 1; j < N; j++ {
+			if a[minIdx] > a[j] {
+				minIdx = j
+			}
+		}
+		a[i], a[minIdx] = a[minIdx], a[i]
+	}
+}
+
+func main() {
+	arr := []int{1, 11, 3, 12, 2}
+	ssort(arr)
+	fmt.Printf("%#v\n", arr) // []int{1, 2, 3, 11, 12}
+}
+```
+
+example: insertion sort
+> <img src="Res03/insertion_sort.gif" width=400>
+
+```go
+package main
+
+import "fmt"
+
+// insertion sort
+func isort(a []int) {
+	N := len(a)
+	for i := 1; i < N; i++ {
+		for j := i; j > 0; j-- {
+			if a[j] < a[j-1] {
+				a[j], a[j-1] = a[j-1], a[j]
+			}
+		}
+	}
+}
+
+func main() {
+	arr := []int{1, 11, 3, 12, 2}
+	isort(arr)
+	fmt.Printf("%#v\n", arr) // []int{1, 2, 3, 11, 12}
+}
+```
+
 ## map
 
 map: key-value数据结构
