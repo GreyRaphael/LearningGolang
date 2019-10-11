@@ -12,6 +12,7 @@
 	- [sync](#sync)
 	- [struct](#struct)
 		- [linked-list](#linked-list)
+		- [doubly linked list](#doubly-linked-list)
 
 ## builtin
 
@@ -1576,6 +1577,18 @@ func main() {
 	// insert node after "girl3", "girl0"
 	addNodeAfter(head, "girl3")
 	traverse(head)
+}
+```
+
+### doubly linked list
+
+如果有两个指针分别指向前一个节点和后一个节点，我们叫做双链表
+
+```go
+type Student struct {
+	Name string
+	Next* Student
+	Prev* Student
 }
 ```
 
