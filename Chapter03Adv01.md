@@ -11,6 +11,7 @@
 	- [3rd package](#3rd-package)
 	- [sync](#sync)
 	- [struct](#struct)
+		- [linked-list](#linked-list)
 
 ## builtin
 
@@ -1283,6 +1284,298 @@ func main() {
 	s2 := Student{}
 	s2.Age = 16
 	fmt.Printf("%#v\n", s2)
+}
+```
+
+### linked-list
+
+每个节点包含下一个节点的地址，这样把所有的节点串起来了，通常把链表中的第一个节点叫做链表头
+
+```go
+type Student struct {
+	Name string
+	Next* Student
+}
+```
+
+example: 单链表
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+	Next *Student // 默认nil
+}
+
+func traverse(p *Student) {
+	for p != nil {
+		fmt.Printf("%#v\n", p)
+		p = p.Next
+	}
+	fmt.Println()
+}
+
+func tail(p *Student) *Student {
+	for p.Next != nil {
+		p = p.Next
+	}
+	return p
+}
+
+func tailAppend(p *Student) {
+	last := tail(p)
+	for i := 0; i < 3; i++ {
+		newStu := &Student{Name: fmt.Sprintf("boy%d", i), Age: 20 + i}
+		last.Next = newStu
+		last = newStu
+	}
+}
+
+func headInsert(p *Student) *Student {
+	for i := 0; i < 2; i++ {
+		newStu := &Student{Name: fmt.Sprintf("girl%d", i), Age: 10 + i}
+		newStu.Next = p
+		p = newStu
+	}
+	return p
+}
+
+func main() {
+	stu1 := Student{Name: "grey", Age: 15}
+	stu2 := Student{Name: "alpha", Age: 66}
+	fmt.Printf("%#v\n", stu1)
+	fmt.Printf("%#v\n\n", stu2)
+
+	stu1.Next = &stu2
+	traverse(&stu1)
+
+	// 尾部插入3节点
+	tailAppend(&stu1)
+	traverse(&stu1)
+
+	// 头部插入2个节点
+	head := headInsert(&stu1)
+	traverse(head)
+}
+```
+
+```bash
+# output
+main.Student{Name:"grey", Age:15, Next:(*main.Student)(nil)}
+main.Student{Name:"alpha", Age:66, Next:(*main.Student)(nil)}
+
+&main.Student{Name:"grey", Age:15, Next:(*main.Student)(0xc0000044c0)}
+&main.Student{Name:"alpha", Age:66, Next:(*main.Student)(nil)}
+
+&main.Student{Name:"grey", Age:15, Next:(*main.Student)(0xc0000044c0)}
+&main.Student{Name:"alpha", Age:66, Next:(*main.Student)(0xc000004580)}
+&main.Student{Name:"boy0", Age:20, Next:(*main.Student)(0xc0000045a0)}
+&main.Student{Name:"boy1", Age:21, Next:(*main.Student)(0xc0000045c0)}
+&main.Student{Name:"boy2", Age:22, Next:(*main.Student)(nil)}
+
+&main.Student{Name:"girl1", Age:11, Next:(*main.Student)(0xc000004680)}
+&main.Student{Name:"girl0", Age:10, Next:(*main.Student)(0xc0000044a0)}
+&main.Student{Name:"grey", Age:15, Next:(*main.Student)(0xc0000044c0)}
+&main.Student{Name:"alpha", Age:66, Next:(*main.Student)(0xc000004580)}
+&main.Student{Name:"boy0", Age:20, Next:(*main.Student)(0xc0000045a0)}
+&main.Student{Name:"boy1", Age:21, Next:(*main.Student)(0xc0000045c0)}
+&main.Student{Name:"boy2", Age:22, Next:(*main.Student)(nil)}
+```
+
+example: 头部插入by二级指针
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+	Next *Student // 默认nil
+}
+
+func traverse(p *Student) {
+	for p != nil {
+		fmt.Printf("%#v\n", p)
+		p = p.Next
+	}
+	fmt.Println()
+}
+
+func headInsert(p **Student) {
+	for i := 0; i < 2; i++ {
+		newStu := &Student{Name: fmt.Sprintf("girl%d", i), Age: 10 + i}
+		newStu.Next = *p
+		*p = newStu
+	}
+}
+
+func main() {
+	head := &Student{Name: "grey", Age: 15}
+	stu2 := &Student{Name: "alpha", Age: 66}
+	head.Next = stu2
+
+	// 头部插入2个节点
+	headInsert(&head)
+	traverse(head)
+}
+// &main.Student{Name:"girl1", Age:11, Next:(*main.Student)(0xc0000044e0)}
+// &main.Student{Name:"girl0", Age:10, Next:(*main.Student)(0xc0000044a0)}
+// &main.Student{Name:"grey", Age:15, Next:(*main.Student)(0xc0000044c0)}
+// &main.Student{Name:"alpha", Age:66, Next:(*main.Student)(nil)}
+```
+
+example: delete node
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+	Next *Student // 默认nil
+}
+
+func traverse(p *Student) {
+	for p != nil {
+		fmt.Printf("%#v\n", p)
+		p = p.Next
+	}
+	fmt.Println()
+}
+
+func headInsert(p **Student) {
+	for i := 0; i < 10; i++ {
+		newStu := &Student{Name: fmt.Sprintf("girl%d", i), Age: 10 + i}
+		newStu.Next = *p
+		*p = newStu
+	}
+}
+
+func deleteNode(p *Student, index int) {
+	for i := 0; i < index-1; i++ {
+		p = p.Next
+	}
+	p.Next = p.Next.Next
+}
+
+func deleteNode2(pp **Student, name string) {
+	// 头指针处理
+	p := *pp
+	if p.Name == name {
+		*pp = p.Next
+		return
+	}
+
+	// 非头指针
+	var prev *Student
+	for p != nil {
+		if p.Name == name {
+			prev.Next = p.Next
+			break
+		}
+		prev = p
+		p = p.Next
+	}
+}
+
+func main() {
+	var head *Student
+	headInsert(&head)
+
+	// delet node index=3
+	deleteNode(head, 3)
+	traverse(head)
+
+	// delete node Name="girl3", "girl9"
+	deleteNode2(&head, "girl3")
+	traverse(head)
+}
+```
+
+example: insert node
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+	Next *Student // 默认nil
+}
+
+func traverse(p *Student) {
+	for p != nil {
+		fmt.Printf("%#v\n", p)
+		p = p.Next
+	}
+	fmt.Println()
+}
+
+func headInsert(p **Student) {
+	for i := 0; i < 10; i++ {
+		newStu := &Student{Name: fmt.Sprintf("girl%d", i), Age: 10 + i}
+		newStu.Next = *p
+		*p = newStu
+	}
+}
+
+func addNodeBefore(pp **Student, name string) {
+	newStu := &Student{Name: "beta", Age: 99}
+
+	// 插入头节点
+	p := *pp
+	if p.Name == name {
+		newStu.Next = p
+		*pp = newStu
+		return
+	}
+
+	// 非头节点
+	var prev *Student
+	for p != nil {
+		if p.Name == name {
+			prev.Next = newStu
+			newStu.Next = p
+			return
+		}
+		prev = p
+		p = p.Next
+	}
+}
+
+func addNodeAfter(p *Student, name string) {
+	newStu := &Student{Name: "gamma", Age: 77}
+	for p != nil {
+		if p.Name == name {
+			newStu.Next = p.Next
+			p.Next = newStu
+			return
+		}
+		p = p.Next
+	}
+}
+
+func main() {
+	var head *Student
+	headInsert(&head)
+
+	// insert node before "girl3", "girl9"
+	addNodeBefore(&head, "girl3")
+	traverse(head)
+
+	// insert node after "girl3", "girl0"
+	addNodeAfter(head, "girl3")
+	traverse(head)
 }
 ```
 
