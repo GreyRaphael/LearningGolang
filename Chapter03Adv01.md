@@ -2130,3 +2130,88 @@ void Student::init(string name, init age){
 	this->age=age
 }
 ```
+
+example: homework
+
+```bash
+src/
+	project1/
+		main/
+			main.go
+		model/
+			book.go
+			student.go
+```
+
+```go
+// book.go
+package model
+
+import "errors"
+
+var ErrStockNotEnough = errors.New("book not enough")
+
+type Book struct {
+	Name       string
+	Total      int
+	Author     string
+	CreateTime string
+}
+
+func (b *Book) SubtractBook(c int) (err error) {
+	// 如果是并发，需要加锁
+	if b.Total < c {
+		err = ErrStockNotEnough
+		return
+	}
+	b.Total -= c
+	return
+}
+
+func (b *Book) AddBook(c int) {
+	b.Total += c
+}
+```
+
+```go
+// student.go
+package model
+
+import "errors"
+
+var ErrNotFoundBook = errors.New("book not found")
+
+type Student struct {
+	ID    int
+	Name  string
+	books []*BorrowItem
+}
+
+type BorrowItem struct {
+	book *Book
+	num  int
+}
+
+func (s *Student) BorrowBook(b *BorrowItem) {
+	s.books = append(s.books, b)
+}
+
+func (s *Student) ReturnBook(b *BorrowItem) (err error) {
+	for i := 0; i < len(s.books); i++ {
+		if s.books[i].book.Name == b.book.Name {
+			if b.num == s.books[i].num {
+				// 将该书前后拼接成新slice
+				s.books = append(s.books[:i], s.books[i+1:]...)
+				return
+			}
+			s.books[i].num -= b.num
+			return
+		}
+	}
+	return ErrNotFoundBook
+}
+
+func (s *Student) GetBookList() []*BorrowItem {
+	return s.books
+}
+```
