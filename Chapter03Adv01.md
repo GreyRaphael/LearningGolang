@@ -12,6 +12,7 @@
 	- [sync](#sync)
 	- [struct](#struct)
 		- [linked-list](#linked-list)
+- [output](#output)
 		- [doubly linked list](#doubly-linked-list)
 		- [tree](#tree)
 
@@ -1649,5 +1650,485 @@ func main() {
 	left2 := &Student{Name: "betaL1", Age: 23}
 	left1.left = left2
 	DFS(root)
+}
+```
+
+example: alias类型需要类型转换
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+type Stu Student // alias
+
+func main() {
+	stu1 := Student{Name: "alpha", Age: 33}
+	stu2 := Stu{Name: "beta", Age: 44}
+	fmt.Printf("%#v, %T\n", stu1, stu1)
+	fmt.Printf("%#v, %T\n\n", stu2, stu2)
+	// // stu1, stu2是不同类型，需要强制转换
+	// stu1 = stu2
+	stu2 = Stu(stu1)
+	fmt.Printf("%#v, %T\n", stu2, stu2)
+}
+// main.Student{Name:"alpha", Age:33}, main.Student
+// main.Stu{Name:"beta", Age:44}, main.Stu
+
+// main.Stu{Name:"alpha", Age:33}, main.Stu
+```
+
+example: factory pattern
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type Phone interface {
+	call()
+}
+
+type NokiaPhone struct {
+}
+
+func (nokiaPhone NokiaPhone) call() {
+	fmt.Println("I am Nokia, I can call you!")
+}
+
+type IPhone struct {
+}
+
+func (iPhone IPhone) call() {
+	fmt.Println("I am iPhone, I can call you!")
+}
+
+func main() {
+	var phone Phone
+
+	phone = new(NokiaPhone)
+	phone.call()
+
+	phone = new(IPhone)
+	phone.call()
+}
+```
+
+example: golang中的struct没有构造函数，一般需要自己写
+
+```go
+src/
+	project1/
+		main
+			main.go
+		model
+			student.go
+```
+
+```go
+// student.go
+package model
+
+type Student struct {
+	Name string
+	Age  int
+	score int // 外部无法使用
+}
+
+func NewStudent(name string, age int) *Student {
+	return &Student{Name: name, Age: age}
+}
+```
+
+```go
+// main.go
+package main
+
+import (
+	"fmt"
+	"project1/model"
+)
+
+func main() {
+	s := model.NewStudent("grey", 20)
+	fmt.Printf("%#v\n", s)
+}
+```
+
+example: 自定义构造函数mehtod2
+> 采用struct的method
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+// 结构体的method在外部
+func (stu *Student) init(name string, age int) {
+	stu.Name = name
+	stu.Age = age
+}
+
+func main() {
+	s1 := &Student{}
+	fmt.Printf("%#v\n", s1)
+	s1.init("alpha", 16)
+	fmt.Printf("%#v\n", s1)
+}
+// &main.Student{Name:"", Age:0}
+// &main.Student{Name:"alpha", Age:16}
+```
+
+example: struct tag
+> struct的tag可以通过反射的机制获取到，最常用的场景就是json序列化和反序列化
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Student struct {
+	Name string `json:"student_name"`
+	age  int    `json:"student_age"`
+}
+
+func main() {
+	stu1 := &Student{Name: "alpha杨天", age: 55}
+	data, err := json.Marshal(stu1) // Marshal只能访问大写开头的Name
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("%#v\n", data)
+	fmt.Printf("%#v\n", string(data))
+}
+// []byte{0x7b, 0x22, 0x73, 0x74, 0x75, 0x64, 0x65, 0x6e, 0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x22, 0x3a, 0x22, 0x61, 0x6c, 0x70, 0x68, 0x61, 0xe6, 0x9d, 0xa8, 0xe5, 0xa4, 0xa9, 0x22, 0x7d}
+// "{\"student_name\":\"alpha杨天\"}"
+
+//// 如果没有tag
+// []byte{0x7b, 0x22, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0x3a, 0x22, 0x61, 0x6c, 0x70, 0x68, 0x61, 0xe6, 0x9d, 0xa8, 0xe5, 0xa4, 0xa9, 0x22, 0x7d}
+// "{\"Name\":\"alpha杨天\"}"
+```
+
+example: anonymous field
+
+```go
+package main
+
+import "fmt"
+
+type Phone struct {
+	CPU    string
+	Memory int
+}
+
+type Xiaomi struct {
+	Phone // 继承
+	Name  string
+	int
+}
+
+func main() {
+	p1 := &Xiaomi{Name: "MI9"} // 无法通过这种方式初始化继承的属性
+	p1.CPU = "Snapdragon"      // 对p1.Phone.CPU的简化
+	p1.Memory = 6
+	p1.int = 100
+	fmt.Printf("%#v\n", p1)
+	fmt.Println(p1.int) // 访问匿名字段
+}
+// &main.Xiaomi{Phone:main.Phone{CPU:"Snapdragon", Memory:6}, Name:"MI9", int:100}
+// 100
+```
+
+继承与组合:
+- 如果一个struct嵌套了另一个匿名结构体，那么这个结构可以直接访问匿名结构体的方法，从而实现了继承
+- 如果一个struct嵌套了另一个有名结构体，那么这个模式就叫组合
+- 如果一个struct嵌套了多个匿名结构体，那么这个结构可以直接访问多个匿名结构体的方法，从而实现了多重继承。
+
+example: anonymous field conflict
+
+```go
+package main
+
+import "fmt"
+
+type Phone struct {
+	CPU    string
+	Memory int
+}
+
+type Xiaomi struct {
+	Phone  // 继承
+	Name   string
+	Memory int
+}
+
+func main() {
+	p1 := &Xiaomi{Name: "MI9"}
+	p1.Memory = 8
+	// 同名冲突，就近原则
+	fmt.Printf("%#v\n", p1) // &main.Xiaomi{Phone:main.Phone{CPU:"", Memory:0}, Name:"MI9", Memory:8}
+}
+```
+
+```go
+package main
+
+import "fmt"
+
+type Phone struct {
+	CPU    string
+	Memory int
+}
+
+func (this Phone) sayHello() {
+	fmt.Println("hello")
+}
+
+type Xiaomi struct {
+	Phone
+	Name string
+}
+
+func main() {
+	p1 := &Xiaomi{Name: "Mi9"}
+	p1.CPU = "Snapdragon"
+	p1.Memory = 8
+	// 调用继承的方法
+	p1.sayHello()
+}
+```
+
+example: 组合
+
+```go
+package main
+
+import "fmt"
+
+type Phone struct {
+	CPU    string
+	Memory int
+}
+
+func (this Phone) sayHello() {
+	fmt.Println("hello")
+}
+
+type Xiaomi struct {
+	p    Phone
+	Name string
+}
+
+func main() {
+	p1 := &Xiaomi{Name: "Mi9"}
+	p1.p.CPU = "Snapdragon"
+	p1.p.Memory = 8
+	p1.p.sayHello()
+}
+```
+
+example: 多重继承
+
+```go
+package main
+
+import "fmt"
+
+type A struct {
+	a int
+}
+
+type B struct {
+	a int
+	b int
+}
+
+type C struct {
+	A
+	B
+}
+
+func main() {
+	s1 := &C{}
+	s1.b = 666
+	// 无法通过s1.a访问
+	s1.A.a = 10
+	s1.B.a = 20
+	fmt.Printf("%#v\n", s1) //&main.C{A:main.A{a:10}, B:main.B{a:20, b:666}}
+}
+```
+
+example: struct method
+> `func (receiver type) methodName (a, b int) int {}`
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+// 结构体的method在外部
+func (stu Student) eat(food string) {
+	fmt.Printf("%v is eatting %v\n", stu.Name, food)
+}
+
+func main() {
+	s := Student{Name: "Alpha", Age: 18}
+	s.eat("apple")
+
+	s2 := Student{"beta", 48}
+	s2.eat("banana")
+}
+```
+
+example: 构造函数
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+// 结构体的method在外部
+func (stu Student) init(name string, age int) {
+	stu.Name = name
+	stu.Age = age
+}
+
+func main() {
+	var s1 Student
+	fmt.Printf("%#v\n", s1)
+	s1.init("alpha", 16) // 并没有发生修改
+	fmt.Printf("%#v\n", s1)
+}
+// main.Student{Name:"", Age:0}
+// main.Student{Name:"", Age:0}
+```
+
+修改为
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+// 结构体的method在外部
+func (stu *Student) init(name string, age int) {
+	stu.Name = name
+	stu.Age = age
+}
+
+func main() {
+	s1 := &Student{}
+	fmt.Printf("%#v\n", s1)
+	s1.init("alpha", 16)
+	fmt.Printf("%#v\n", s1)
+}
+// &main.Student{Name:"", Age:0}
+// &main.Student{Name:"alpha", Age:16}
+```
+
+example: struct method
+
+```go
+package main
+
+import "fmt"
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+func (stu *Student) init(name string, age int) {
+	stu.Name = name
+	stu.Age = age
+}
+
+func (stu Student) printStu() {
+	fmt.Printf("Name=%v, Age=%v\n", stu.Name, stu.Age)
+}
+
+func main() {
+	var s1 Student
+	s1.printStu()
+
+	s1.init("alpha", 16) // 对(&s1).init("alpha", 16)的简化
+	s1.printStu()
+}
+```
+
+example: struct method
+> 方法的访问控制，也是通过大小写来控制
+
+```go
+package main
+
+import "fmt"
+
+type integer int
+
+func (i integer) printInt() {
+	fmt.Printf("result=%#v\n", i)
+}
+
+func (i *integer) set(b integer) {
+	*i = b
+}
+
+func main() {
+	var a integer
+	a = 100
+	a.printInt() // result=100
+
+	a.set(222)
+	a.printInt() //result=222
+}
+```
+
+example: 对比c++代码
+
+```cpp
+class Student{
+	private:
+		string name;
+		int age;
+	public:
+		void init(string name, int age);
+}
+
+// 将函数分离出class
+void Student::init(string name, init age){
+	this->name=name
+	this->age=age
 }
 ```
