@@ -3,6 +3,7 @@
 - [Golang Interface](#golang-interface)
 
 Interface: Interface类型可以定义一组方法，但是这些不需要实现。并且interface不能包含任何变量。
+> 遵循一个Interface就是遵循一个规范，使得使用方不用关注具体的实现
 
 ```go
 type example interface{
@@ -39,7 +40,9 @@ func (p Xiaomi) surf() {
 }
 
 func main() {
-	p := Xiaomi{}
+	var p Phone
+
+	p = Xiaomi{}
 	p.surf()
 	status := p.send(`"hello"`)
 	fmt.Println(status) // true
@@ -100,11 +103,49 @@ func (iPhone IPhone) call() {
 func main() {
 	var phone Phone
 
-	phone = new(NokiaPhone)
+	phone = NokiaPhone{}
 	phone.call()
 
-	phone = new(IPhone)
+	phone = IPhone{}
 	phone.call()
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+type Phone interface {
+	call()
+}
+
+type NokiaPhone struct {
+}
+
+func (nokiaPhone *NokiaPhone) call() {
+	fmt.Println("I am Nokia, I can call you!")
+}
+
+type IPhone struct {
+}
+
+func (iPhone *IPhone) call() {
+	fmt.Println("I am iPhone, I can call you!")
+}
+
+func main() {
+	var phone Phone
+
+	phone = &NokiaPhone{}
+	phone.call()
+	fmt.Printf("%#v\n", phone) //&main.NokiaPhone{}
+
+	phone = &IPhone{}
+	phone.call()
+	fmt.Printf("%#v\n", phone) //&main.IPhone{}
 }
 ```
 
@@ -161,6 +202,7 @@ import (
 
 type Android interface {
 	surf()
+	playSugar()
 }
 
 type Phone interface {
@@ -180,6 +222,11 @@ func (p Xiaomi) surf() {
 func (p Xiaomi) send(data string) bool {
 	fmt.Printf("I'm sending %v\n", data)
 	return data != ""
+}
+
+// 两个方法都实现了才算实现了Android接口
+func (p Xiaomi) playSugar() {
+	fmt.Println("I'm playing sugar game")
 }
 
 func main() {
@@ -216,9 +263,76 @@ type File interface {
 空接口: 空接口没有任何方法，所以所有类型都实现了空接口。
 
 ```go
-var a int
-var b interface{}
-b  = a
+package main
+
+import "fmt"
+
+func main() {
+	var a interface{}
+	fmt.Printf("%v, %T\n", a, a) // <nil>, <nil>
+	var b int
+	b = 10
+	a = b
+	fmt.Printf("%v, %T\n", a, a) // 10, int
+}
 ```
 
+example: 普通struct实现Sort接口
+> [Sort interface](https://go-zh.org/pkg/sort/#Sort)
 
+```go
+// 要实现该interface
+type Interface interface {
+    // Len is the number of elements in the collection.
+    // Len 为集合内元素的总数
+    Len() int
+    // Less reports whether the element with
+    // index i should sort before the element with index j.
+    //
+    // Less 返回索引为 i 的元素是否应排在索引为 j 的元素之前。
+    Less(i, j int) bool
+    // Swap swaps the elements with indexes i and j.
+    // Swap 交换索引为 i 和 j 的元素
+    Swap(i, j int)
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"sort"
+	"time"
+)
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+// 通过vscode的codesnippet生成
+type StuSlice []Student
+
+func (a StuSlice) Len() int           { return len(a) }
+func (a StuSlice) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a StuSlice) Less(i, j int) bool { return a[i].Age < a[j].Age }
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func main() {
+	var students StuSlice
+	for i := 0; i < 5; i++ {
+		newStu := Student{Name: fmt.Sprintf("stu%d", i), Age: rand.Intn(20)}
+		students = append(students, newStu)
+	}
+	fmt.Println(students)
+	sort.Sort(students)
+	fmt.Println(students)
+}
+// [{stu0 6} {stu1 0} {stu2 12} {stu3 12} {stu4 18}]
+// [{stu1 0} {stu0 6} {stu2 12} {stu3 12} {stu4 18}]
+```
