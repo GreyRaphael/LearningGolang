@@ -12,7 +12,6 @@
 	- [sync](#sync)
 	- [struct](#struct)
 		- [linked-list](#linked-list)
-- [output](#output)
 		- [doubly linked list](#doubly-linked-list)
 		- [tree](#tree)
 
@@ -1367,7 +1366,6 @@ func main() {
 ```
 
 ```bash
-# output
 main.Student{Name:"grey", Age:15, Next:(*main.Student)(nil)}
 main.Student{Name:"alpha", Age:66, Next:(*main.Student)(nil)}
 
