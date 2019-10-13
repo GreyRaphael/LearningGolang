@@ -1192,7 +1192,6 @@ func main() {
 
 ## struct
 
-struct:
 - Go语言没有class类型，只有struct类型
 - 用来自定义复杂数据结构
 - struct里面可以包含多个字段（属性）
@@ -1668,54 +1667,12 @@ type Stu Student // alias
 func main() {
 	stu1 := Student{Name: "alpha", Age: 33}
 	stu2 := Stu{Name: "beta", Age: 44}
-	fmt.Printf("%#v, %T\n", stu1, stu1)
-	fmt.Printf("%#v, %T\n\n", stu2, stu2)
+	fmt.Printf("%#v, %T\n", stu1, stu1) // main.Student{Name:"alpha", Age:33}, main.Student
+	fmt.Printf("%#v, %T\n\n", stu2, stu2) // main.Stu{Name:"beta", Age:44}, main.Stu
 	// // stu1, stu2是不同类型，需要强制转换
 	// stu1 = stu2
 	stu2 = Stu(stu1)
-	fmt.Printf("%#v, %T\n", stu2, stu2)
-}
-// main.Student{Name:"alpha", Age:33}, main.Student
-// main.Stu{Name:"beta", Age:44}, main.Stu
-
-// main.Stu{Name:"alpha", Age:33}, main.Stu
-```
-
-example: factory pattern
-
-```go
-package main
-
-import (
-	"fmt"
-)
-
-type Phone interface {
-	call()
-}
-
-type NokiaPhone struct {
-}
-
-func (nokiaPhone NokiaPhone) call() {
-	fmt.Println("I am Nokia, I can call you!")
-}
-
-type IPhone struct {
-}
-
-func (iPhone IPhone) call() {
-	fmt.Println("I am iPhone, I can call you!")
-}
-
-func main() {
-	var phone Phone
-
-	phone = new(NokiaPhone)
-	phone.call()
-
-	phone = new(IPhone)
-	phone.call()
+	fmt.Printf("%#v, %T\n", stu2, stu2) // main.Stu{Name:"alpha", Age:33}, main.Stu
 }
 ```
 
@@ -1723,11 +1680,11 @@ example: golang中的struct没有构造函数，一般需要自己写
 
 ```go
 src/
-	project1/
-		main
-			main.go
-		model
-			student.go
+    project1/
+        main
+            main.go
+        model
+            student.go
 ```
 
 ```go
@@ -1781,12 +1738,10 @@ func (stu *Student) init(name string, age int) {
 
 func main() {
 	s1 := &Student{}
-	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%#v\n", s1) // &main.Student{Name:"", Age:0}
 	s1.init("alpha", 16)
-	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%#v\n", s1) // &main.Student{Name:"alpha", Age:16}
 }
-// &main.Student{Name:"", Age:0}
-// &main.Student{Name:"alpha", Age:16}
 ```
 
 example: struct tag
@@ -1973,7 +1928,8 @@ func main() {
 ```
 
 example: struct method
-> `func (receiver type) methodName (a, b int) int {}`
+> `func (receiver type) methodName (a, b int) int {}`  
+> 方法的访问控制，也是通过大小写来控制
 
 ```go
 package main
@@ -2019,12 +1975,10 @@ func (stu Student) init(name string, age int) {
 
 func main() {
 	var s1 Student
-	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%#v\n", s1) // main.Student{Name:"", Age:0}
 	s1.init("alpha", 16) // 并没有发生修改
-	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%#v\n", s1) // main.Student{Name:"", Age:0}
 }
-// main.Student{Name:"", Age:0}
-// main.Student{Name:"", Age:0}
 ```
 
 修改为
@@ -2047,12 +2001,10 @@ func (stu *Student) init(name string, age int) {
 
 func main() {
 	s1 := &Student{}
-	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%#v\n", s1) // &main.Student{Name:"", Age:0}
 	s1.init("alpha", 16)
-	fmt.Printf("%#v\n", s1)
+	fmt.Printf("%#v\n", s1) // &main.Student{Name:"alpha", Age:16}
 }
-// &main.Student{Name:"", Age:0}
-// &main.Student{Name:"alpha", Age:16}
 ```
 
 example: struct method
@@ -2086,7 +2038,6 @@ func main() {
 ```
 
 example: struct method
-> 方法的访问控制，也是通过大小写来控制
 
 ```go
 package main
