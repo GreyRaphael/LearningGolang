@@ -10,6 +10,13 @@ Reflect可以在运行时动态获取变量的相关信息
 变量←→`interface{}`←→`reflect.Value`
 
 ```go
+// reflect.Value
+type Value struct {
+    // contains filtered or unexported fields
+}
+```
+
+```go
 package main
 
 import (
@@ -73,7 +80,6 @@ import (
 )
 
 func main() {
-
 	var x float64 = 3.4
 	fmt.Println("type:", reflect.TypeOf(x)) // type: float64
 	v := reflect.ValueOf(x)
@@ -82,7 +88,7 @@ func main() {
 	fmt.Println("kind:", v.Kind())   // kind: float64
 	fmt.Println("value:", v.Float()) // value:3.4
 
-	fmt.Println(v.Interface())                    // 3.4
+	fmt.Println(v.Interface()) // 3.4
 	y := v.Interface().(float64)
 	fmt.Println(y) //3.4
 }
