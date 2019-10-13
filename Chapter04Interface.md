@@ -258,7 +258,50 @@ type File interface {
 }
 ```
 
-空接口: 空接口没有任何方法，所以所有类型都实现了空接口。
+example: 接口嵌套
+
+```go
+package main
+
+import "fmt"
+
+type Reader interface {
+	Read()
+}
+
+type Writer interface {
+	Write()
+}
+
+type ReadWriter interface {
+	// 接口嵌套
+	Reader
+	Writer
+}
+
+type File struct {
+}
+
+func (f *File) Read() {
+	fmt.Println("file read")
+}
+
+func (f *File) Write() {
+	fmt.Println("file write")
+}
+
+func Test(rw ReadWriter) {
+	rw.Read()
+	rw.Write()
+}
+
+func main() {
+	var f *File
+	Test(f)
+}
+```
+
+空接口: 空接口没有任何方法，所以所有类型都实现了空接口，也就是任何变量都可以赋值给空接口
 
 ```go
 package main
@@ -272,6 +315,24 @@ func main() {
 	b = 10
 	a = b
 	fmt.Printf("%v, %T\n", a, a) // 10, int
+}
+```
+
+example: `interface{}`切片
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var a []interface{}
+	a = append(a, 10)
+	a = append(a, "grey")
+	a = append(a, 12.56)
+	for _, v := range a {
+		fmt.Printf("%v, ", v)
+	} // 10, grey, 12.56,
 }
 ```
 
@@ -333,4 +394,175 @@ func main() {
 }
 // [{stu0 6} {stu1 0} {stu2 12} {stu3 12} {stu4 18}]
 // [{stu1 0} {stu0 6} {stu2 12} {stu3 12} {stu4 18}]
+```
+
+类型断言: 从普通类型到接口变量直接赋值就行；从接口变量得到传入的类型，就需要类型断言。
+
+example: simple type assertion
+
+```go
+package main
+
+import "fmt"
+
+func main() {
+	var a interface{}
+	var b int
+
+	a = b // 普通类型→interface, 直接赋值
+	c := a.(int) // interface→普通类型
+	fmt.Printf("%T, %v\n", c, c) //int, 0
+}
+```
+
+example: type assertion function
+
+```go
+package main
+
+import "fmt"
+
+func Test(i interface{}) {
+	res, ok := i.(int)
+	if ok {
+		fmt.Printf("Result=%v\n", res)
+	} else {
+		fmt.Println("not int")
+	}
+}
+
+func main() {
+	a := 100
+	b := "grey"
+	Test(a) // Result=100
+	Test(b) // not int
+}
+```
+
+example: classifier
+
+```go
+package main
+
+import "fmt"
+
+type Student struct{}
+
+func classifier(items ...interface{}) {
+	for i, v := range items {
+		switch v.(type) {
+		case bool:
+			fmt.Printf("param #%d is a bool\n", i)
+		case float64:
+			fmt.Printf("param #%d is a float64\n", i)
+		case int:
+			fmt.Printf("param #%d is an int\n", i)
+		case nil:
+			fmt.Printf("param #%d is nil\n", i)
+		case string:
+			fmt.Printf("param #%d is a string\n", i)
+		case *Student:
+			fmt.Printf("param #%d is a *Student\n", i)
+		default:
+			fmt.Printf("param #%d is type is unknown\n", i)
+		}
+	}
+}
+
+func main() {
+	a := 10
+	b := "grey"
+	c := &Student{}
+	classifier(a, b, c)
+}
+// param #0 is an int
+// param #1 is a string
+// param #2 is a *Student
+```
+
+example: 判断一个变量是否实现了指定接口
+
+```go
+package main
+
+import "fmt"
+
+type Person interface {
+	Eat()
+}
+
+type Student struct{}
+
+func (s Student) Eat() {
+	fmt.Println("I'm eating")
+}
+
+func main() {
+	s := Student{}
+	var i interface{} = s
+	v, ok := i.(Person)
+	fmt.Println(v, ok) // {} true
+}
+```
+
+example: 实现一个通用的链表
+
+```go
+package main
+
+import "fmt"
+
+type LinkNode struct {
+	data interface{}
+	next *LinkNode
+}
+
+type Link struct {
+	head *LinkNode
+	tail *LinkNode
+}
+
+func (l *Link) LeftAppend(data interface{}) {
+	node := &LinkNode{data: data}
+	// 空链表判断
+	if l.head == nil && l.tail == nil {
+		l.head = node
+		l.tail = node
+	} else {
+		node.next = l.head
+		l.head = node
+	}
+}
+
+func (l *Link) RightAppend(data interface{}) {
+	node := &LinkNode{data: data}
+	// 空链表判断
+	if l.head == nil && l.tail == nil {
+		l.head = node
+		l.tail = node
+	} else {
+		l.tail.next = node
+		l.tail = node
+	}
+}
+
+func (l *Link) Traverse() {
+	head := l.head
+	for head != nil {
+		fmt.Printf("%v, ", head.data)
+		head = head.next
+	}
+	fmt.Println()
+}
+
+func main() {
+	var l Link
+	for i := 0; i < 3; i++ {
+		l.LeftAppend(fmt.Sprintf("boy-%d", i))
+	}
+	for i := 0; i < 3; i++ {
+		l.RightAppend(fmt.Sprintf("girl-%d", i))
+	}
+	l.Traverse() // boy-2, boy-1, boy-0, girl-0, girl-1, girl-2, 
+}
 ```
