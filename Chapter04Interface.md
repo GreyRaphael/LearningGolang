@@ -1,9 +1,7 @@
 # Golang Interface
 
-- [Golang Interface](#golang-interface)
-
-Interface: Interface类型可以定义一组方法，但是这些不需要实现。并且interface不能包含任何变量。
-> 遵循一个Interface就是遵循一个规范，使得使用方不用关注具体的实现
+interface类型可以定义一组方法，但是这些方法不需要实现。并且interface不能包含任何变量。
+> 遵循一个interface就是遵循一个规范，令使用方不用关注具体的实现
 
 ```go
 type example interface{
@@ -187,7 +185,7 @@ func main() {
 ```
 
 Attension:
-- Golang中的接口，不需要显示的实现。只要一个变量，含有接口类型中的**所有方法**，那么这个变量就实现这个接口。因此，golang中没有implement类似的关键字
+- Golang中的接口，不需要显式地实现(比如Java中的关键字`implement`)。只要一个变量，含有接口类型中的**所有方法**，那么这个变量就实现这个接口。
 - 如果一个变量含有了多个interface类型的方法，那么这个变量就实现了多个接口。
 - 如果一个变量只含有了1个interface的方部分方法，那么这个变量没有实现这个接口。
 
@@ -281,7 +279,7 @@ example: 普通struct实现Sort接口
 > [Sort interface](https://go-zh.org/pkg/sort/#Sort)
 
 ```go
-// 要实现该interface
+// 要实现该Interface这个类型
 type Interface interface {
     // Len is the number of elements in the collection.
     // Len 为集合内元素的总数
