@@ -566,3 +566,62 @@ func main() {
 	l.Traverse() // boy-2, boy-1, boy-0, girl-0, girl-1, girl-2, 
 }
 ```
+
+example: `init` from different files
+> 每个文件中`init`都会被执行
+
+```bash
+src/
+	project1/
+		main
+			main.go
+		model
+			book.go
+			student.go
+```
+
+```go
+// book.go
+package model
+
+import "fmt"
+
+func init() {
+	fmt.Println("from book.go")
+}
+
+func Book() {
+	fmt.Println("book book book")
+}
+```
+
+```go
+// student.go
+package model
+
+import "fmt"
+
+func init() {
+	fmt.Println("from student.go")
+}
+
+func Student() {
+	fmt.Println("student student student")
+}
+```
+
+```go
+// main.go
+package main
+
+import "model"
+
+func main() {
+	model.Book()
+	model.Student()
+}
+// from book.go
+// from student.go
+// student student student
+// book book book
+```
