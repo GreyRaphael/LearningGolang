@@ -683,7 +683,7 @@ func main() {
 		inst, err := balence.Balence(BalenceMethodName, insts)
 		if err != nil {
 			fmt.Println("Do balence err!", err)
-			continue
+			break
 		}
 		fmt.Println(inst)
 		time.Sleep(time.Second)
