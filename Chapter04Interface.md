@@ -625,3 +625,193 @@ func main() {
 // student student student
 // book book book
 ```
+
+example: 负载均衡算法
+> [Balence](https://studygolang.com/articles/12226)  
+> [Balence](https://husaky.com/237)  
+
+```bash
+src/
+	project1/
+		main
+			main.go
+		balence
+			instance.go
+			balencer.go
+			randomBalence.go
+			roundrobinBalenc.go
+			manager.go
+```
+
+```go
+// main.go
+package main
+
+import (
+	"fmt"
+	"math/rand"
+	"project1/balence"
+	"time"
+)
+
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
+func main() {
+	// 初始化主机
+	var insts []*balence.Instance
+	for i := 0; i < 5; i++ {
+		host := fmt.Sprintf("192.168.%d.%d", rand.Intn(255), rand.Intn(255))
+		newInst := &balence.Instance{host, "8080"}
+		insts = append(insts, newInst)
+	}
+	// 遍历主机
+	for _, v := range insts {
+		fmt.Println(v)
+	}
+	fmt.Println()
+
+	// Manager
+	BalenceMethodName := "roundrobin"
+	// // from command-line
+	// if len(os.Args) > 1 {
+	// 	BalenceMethodName = os.Args[1]
+	// }
+
+	for {
+		inst, err := balence.Balence(BalenceMethodName, insts)
+		if err != nil {
+			fmt.Println("Do balence err!", err)
+			continue
+		}
+		fmt.Println(inst)
+		time.Sleep(time.Second)
+	}
+}
+// 192.168.233.22:8080
+// 192.168.131.237:8080
+// 192.168.51.59:8080
+// 192.168.205.157:8080
+// 192.168.184.228:8080
+
+// using roundrobin balencer
+// 192.168.233.22:8080
+// using roundrobin balencer
+// 192.168.131.237:8080
+// using roundrobin balencer
+// 192.168.51.59:8080
+// using roundrobin balencer
+// 192.168.205.157:8080
+// using roundrobin balencer
+// 192.168.184.228:8080
+// using roundrobin balencer
+// 192.168.233.22:8080
+// using roundrobin balencer
+// 192.168.131.237:8080
+```
+
+```go
+// instance.go
+package balence
+
+type Instance struct {
+	Host string
+	Port string
+}
+
+func (i *Instance) String() string {
+	return i.Host + ":" + i.Port
+}
+```
+
+```go
+// balencer.go
+package balence
+
+type Balencer interface {
+	DoBalence([]*Instance) (*Instance, error)
+}
+```
+
+```go
+// randomBalence.go
+package balence
+
+import (
+	"errors"
+	"math/rand"
+)
+
+type RandomBalence struct {
+}
+
+func init() {
+	RegisterBalence("random", &RandomBalence{})
+}
+
+func (r *RandomBalence) DoBalence(insts []*Instance) (inst *Instance, err error) {
+	lens := len(insts)
+	if lens == 0 {
+		err = errors.New("No Instance")
+		return
+	}
+	inst = insts[rand.Intn(lens)]
+	return
+}
+```
+
+```go
+// roundrobinBalence.go
+package balence
+
+import "errors"
+
+type RoundrobinBalence struct {
+	curIndex int
+}
+
+func init() {
+	RegisterBalence("roundrobin", &RoundrobinBalence{})
+}
+
+func (r *RoundrobinBalence) DoBalence(insts []*Instance) (inst *Instance, err error) {
+	lens := len(insts)
+	if lens == 0 {
+		err = errors.New("No Instance")
+		return
+	}
+
+	inst = insts[r.curIndex]
+	r.curIndex = (r.curIndex + 1) % lens
+	return
+}
+```
+
+```go
+// manager.go
+package balence
+
+import "fmt"
+
+type BalenceMgr struct {
+	allMethod map[string]Balencer
+}
+
+var mgr = BalenceMgr{make(map[string]Balencer)}
+
+func RegisterBalence(name string, b Balencer) {
+	mgr.allMethod[name] = b
+}
+
+func Balence(name string, insts []*Instance) (inst *Instance, err error) {
+	balencer, ok := mgr.allMethod[name]
+	if !ok {
+		fmt.Errorf("Not such method:%v\n", name)
+		return
+	}
+	fmt.Printf("using %v balencer\n", name)
+	inst, err = balencer.DoBalence(insts)
+	return
+}
+```
