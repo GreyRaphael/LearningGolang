@@ -675,7 +675,7 @@ func main() {
 - 代理(proxy): Nginx
 - RPC
   - 客户端决定访问服务器，导致笨重的客户端
-  - 先访问Lookaside服务器，Lookaside服务器返回负载均衡策略，然后客户端根据策略访问对应服务
+  - 先访问Lookaside服务器(注册中心, 通过etcd or zookeeper实现)，Lookaside服务器返回负载均衡策略，然后客户端根据策略访问对应服务。应用于微服务中，很容易扩容、缩容服务(都不需要人工修改配置，nginx扩容需要修改配置文件)，叫做**服务注册**，**服务发现**。还可以应用于云服务，弹性增加docker容器
 
 exampe: prime number
 
