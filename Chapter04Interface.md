@@ -635,6 +635,7 @@ src/
 	project1/
 		main
 			main.go
+			customBalence.go
 		balence
 			instance.go
 			balencer.go
@@ -812,6 +813,41 @@ func Balence(name string, insts []*Instance) (inst *Instance, err error) {
 	}
 	fmt.Printf("using %v balencer\n", name)
 	inst, err = balencer.DoBalence(insts)
+	return
+}
+```
+
+```go
+// customBalence.go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"hash/crc32"
+	"math/rand"
+	"project1/balence"
+)
+
+type HashBalence struct {
+}
+
+func init() {
+	balence.RegisterBalence("customhash", &HashBalence{})
+}
+
+func (h *HashBalence) DoBalence(insts []*balence.Instance) (inst *balence.Instance, err error) {
+	lens := len(insts)
+	if lens == 0 {
+		err = errors.New("No Instance")
+		return
+	}
+
+	randString := fmt.Sprintf("%v", rand.Int())
+	crcTable := crc32.MakeTable(crc32.IEEE)
+	hashVal := crc32.Checksum([]byte(randString), crcTable)
+	index := int(hashVal) % lens
+	inst = insts[index]
 	return
 }
 ```
