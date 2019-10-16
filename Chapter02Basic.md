@@ -1739,6 +1739,7 @@ func main() {
 	s, _ := ioutil.ReadAll(f)
 	ch, en, space, num, other := count(string(s))
 	fmt.Printf("ch=%d,en=%d, space=%d, num=%d, other=%d", ch, en, space, num, other)
+	// ch=7,en=13, space=4, num=6, other=4
 }
 ```
 
