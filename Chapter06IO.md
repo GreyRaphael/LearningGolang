@@ -1,5 +1,11 @@
 # Golang IO
 
+- [Golang IO](#golang-io)
+  - [File](#file)
+  - [json](#json)
+
+## File
+
 `os.File`封装所有文件相关操作
 
 操作终端相关文件句柄常量，它们都是都是`*os.File`
@@ -443,3 +449,134 @@ func main() {
 	}
 }
 ```
+
+## json
+
+exmaple: 序列化`struct`, `map`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Student struct {
+	Name  string
+	Age   int `json:"stu_age"`
+	Score float32
+}
+
+func main() {
+	stu1 := &Student{"alpha", 23, 12.5}
+
+	// struct to json
+	data1, _ := json.Marshal(stu1)
+	fmt.Printf("%#v\n", data1)         // []byte
+	fmt.Printf("%#v\n", string(data1)) // "{\"Name\":\"alpha\",\"stu_age\":23,\"Score\":12.5}"
+
+	// map to json
+	m1 := map[string]interface{}{"Name": "beta", "stu_age": 36, "Score": 13.6}
+	data2, _ := json.Marshal(m1)
+	fmt.Printf("%#v\n", string(data2)) // "{\"Name\":\"beta\",\"Score\":13.6,\"stu_age\":36}"
+}
+```
+
+example: 反序列化`struct`, `map`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Student struct {
+	Name  string
+	Age   int `json:"stu_age"`
+	Score float32
+}
+
+func main() {
+	str := `{"Name":"alpha","Score":12.5,"stu_age":32}`
+
+	// json to sturct
+	stu1 := &Student{}
+	json.Unmarshal([]byte(str), stu1)
+	fmt.Printf("%#v\n", stu1) //&main.Student{Name:"alpha", Age:32, Score:12.5}
+
+	// json to map
+	m1 := map[string]interface{}{}
+	json.Unmarshal([]byte(str), &m1)
+	fmt.Printf("%#v\n", m1) // map[string]interface {}{"Name":"alpha", "Score":12.5, "stu_age":32}
+
+	m2 := make(map[string]interface{})
+	json.Unmarshal([]byte(str), &m2)
+	fmt.Printf("%#v\n", m2) // map[string]interface {}{"Name":"alpha", "Score":12.5, "stu_age":32}
+
+	var m3 map[string]interface{}
+	json.Unmarshal([]byte(str), &m3)
+	fmt.Printf("%#v\n", m3) // map[string]interface {}{"Name":"alpha", "Score":12.5, "stu_age":32}
+}
+```
+
+example: 序列化`slice`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Student struct {
+	Name  string
+	Age   int `json:"stu_age"`
+	Score float32
+}
+
+func main() {
+	stu1 := Student{"alpha", 23, 12.5}
+	stu2 := Student{"beta", 34, 12.5}
+	var students []Student
+	students = append(students, stu1, stu2)
+
+	data, _ := json.Marshal(students)
+	fmt.Printf("%#v\n", string(data)) // "[{\"Name\":\"alpha\",\"stu_age\":23,\"Score\":12.5},{\"Name\":\"beta\",\"stu_age\":34,\"Score\":12.5}]"
+}
+```
+
+examle: 反序列化`slice`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Student struct {
+	Name  string
+	Age   int `json:"stu_age"`
+	Score float32
+}
+
+func main() {
+	str := `[{"Name":"alpha","stu_age":23,"Score":12.5},{"Name":"beta","stu_age":34,"Score":12.5}]`
+
+	// json to slice of struct
+	var students []Student
+	json.Unmarshal([]byte(str), &students)
+	fmt.Printf("%#v\n", students) // []main.Student{main.Student{Name:"alpha", Age:23, Score:12.5}, main.Student{Name:"beta", Age:34, Score:12.5}}
+
+	// json to slice of map
+	var stus []map[string]interface{}
+	json.Unmarshal([]byte(str), &stus)
+	fmt.Printf("%v\n", stus) // [map[Name:alpha Score:12.5 stu_age:23] map[Name:beta Score:12.5 stu_age:34]]
+}
+```
+
