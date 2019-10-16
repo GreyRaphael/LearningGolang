@@ -3,6 +3,7 @@
 - [Golang IO](#golang-io)
   - [File](#file)
   - [json](#json)
+  - [Error](#error)
 
 ## File
 
@@ -580,3 +581,127 @@ func main() {
 }
 ```
 
+## Error
+
+golang中的`error`是如下接口
+
+```go
+type error interface {
+    Error() string
+}
+```
+
+example: 自定义错误实现error的接口
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+	"time"
+)
+
+type PathError struct {
+	Op         string
+	Path       string
+	Msg        string
+	CreateTime string
+}
+
+func (e *PathError) Error() string {
+	return fmt.Sprintf("%v|%v|%v|%v\n", e.Op, e.Path, e.Msg, e.CreateTime)
+}
+
+func Test(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return &PathError{"read", filename, err.Error(), time.Now().Format("2006/1/02")}
+	}
+	defer file.Close()
+	return nil
+}
+
+func main() {
+	err := Test("xxx.txt")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	// type assertion method1
+	v, ok := err.(*PathError)
+	if ok {
+		fmt.Printf("this is custom PathError:%#v\n", v)
+		// this is custom PathError:&main.PathError{Op:"read", Path:"xxx.txt", Msg:"open xxx.txt: The system cannot find the file specified.", CreateTime:"2019/10/16"}
+	}
+
+	// type assertion method2
+	switch v := err.(type) {
+	case *PathError:
+		fmt.Printf("this is custom PathError:%#v\n", v)
+	default:
+
+	}
+}
+```
+
+example: 一般错误都不采用上述方法
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+)
+
+var PathError = errors.New("PathError")
+
+func Test(filename string) error {
+	file, err := os.Open(filename)
+	if err != nil {
+		return PathError
+	}
+	defer file.Close()
+	return nil
+}
+
+func main() {
+	err := Test("xxx.txt")
+	if err != nil {
+		fmt.Println(err)         // PathError
+		fmt.Println(err.Error()) // PathError
+	}
+}
+```
+
+example: `panic` & `recover`
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func badCall() {
+	panic("bad end")
+}
+
+func test() {
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Printf("Panicking %s\n", e)
+		}
+	}()
+	badCall()
+	fmt.Printf("After bad call\r\n")
+}
+
+func main() {
+	fmt.Printf("Calling test\r\n")
+	test()
+	fmt.Printf("Test completed\r\n")
+}
+```
