@@ -35,6 +35,7 @@ func main() {
 ```
 
 MPG模型:
+> [MPG model](https://i6448038.github.io/2017/12/04/golang-concurrency-principle/)
 - M: Machine, 关联内核线程
 - P: Processor, 代表M所需的上下文
 - G: Goroutine
