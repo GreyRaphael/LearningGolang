@@ -12,10 +12,10 @@ Process vs Thread vs Coroutine:
 
 ## channel traverse
 
-Method1: channel简单遍历(not recommended)
+Method1: channel简单遍历
 - 读次数<=写次数: 正常
 - 读次数>写次数: 
-  - 无`close(ch)`: deadlock
+  - 无`close(ch)`: 堵塞
   - 有`close(ch)`: 多出的次数获取的值为0
 
 
@@ -60,7 +60,7 @@ func main() {
 
 	for i := 0; i < 2*N; i++ {
 		fmt.Printf("%v, ", <-ch)
-	} //deadlock
+	} //堵塞
 }
 ```
 
@@ -88,7 +88,7 @@ func main() {
 ```
 
 Method2: channel断言遍历
-- 无`close(ch)`: deadlock
+- 无`close(ch)`: 堵塞，因为channel没有数据+没有close
 - 有`close(ch)`: 正常
 
 ```go
@@ -128,7 +128,7 @@ func main() {
 ```
 
 Method3: `for range`遍历
-- 无`close(ch)`: deadlock
+- 无`close(ch)`: 堵塞，因为channel没有数据+没有close
 - 有`close(ch)`: 正常
 
 ```go
@@ -155,6 +155,7 @@ func main() {
 ```
 
 Method1~3都是子routine写，主routine读；如果都是子routine读写
+> 尽量加上`close`, 尤其是多个channel存在的情况下，`for range`, `value, ok:=<-ch`没有`close`会导致堵塞
 
 ```go
 package main
@@ -172,14 +173,15 @@ func main() {
 		for i := 0; i < N; i++ {
 			ch <- i
 		}
-		// close(ch) // 不带close更好，带了之后会多出0
+		close(ch)
 	}()
 
 	go func() {
+		// 2N > N
 		for i := 0; i < 2*N; i++ {
 			fmt.Printf("%v, ", <-ch)
 		}
-	}() // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+	}() // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 
 	time.Sleep(3 * time.Second)
 }
@@ -201,6 +203,7 @@ func main() {
 		for i := 0; i < N; i++ {
 			ch <- i
 		}
+		close(ch)
 	}()
 
 	go func() {
@@ -233,6 +236,7 @@ func main() {
 		for i := 0; i < N; i++ {
 			ch <- i
 		}
+		close(ch)
 	}()
 
 	go func() {
@@ -353,7 +357,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 )
 
 type Student struct {
@@ -370,12 +373,8 @@ func addStudents(stuChan chan *Student) {
 }
 
 func main() {
-	var wg sync.WaitGroup
-
 	stuChan := make(chan *Student, 100)
 	go addStudents(stuChan)
-
-	wg.Wait()
 
 	// close channel之后，不再向channel写入数据，主协程可以用for range遍历
 	for v := range stuChan {
@@ -404,6 +403,7 @@ func addStudents(stuChan chan *Student) {
 		newStu := &Student{fmt.Sprintf("stu%d", i), 20 + i}
 		stuChan <- newStu
 	}
+	close(stuChan)
 }
 
 func readStudents(stuChan chan *Student) {
@@ -441,17 +441,16 @@ func addStudents(stuChan chan *Student) {
 		newStu := &Student{fmt.Sprintf("stu%d", i), 20 + i}
 		stuChan <- newStu
 	}
+	close(stuChan)
 }
 
 func readStudents(stuChan chan *Student) {
-	// // method1:
-	// for v := range stuChan {
-	// 	fmt.Printf("%#v\n", v)
-	// }
-
-	// method2:
 	for {
-		fmt.Printf("%#v\n", <-stuChan)
+		if v, ok := <-stuChan; ok {
+			fmt.Printf("%#v\n", v)
+		} else {
+			break
+		}
 	}
 }
 
@@ -471,7 +470,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 )
 
 type Student struct {
@@ -485,8 +483,6 @@ func addStudent(i int, stuChan chan *Student) {
 }
 
 func main() {
-	var wg sync.WaitGroup
-
 	stuChan := make(chan *Student, 100)
 
 	N := 12
@@ -494,7 +490,6 @@ func main() {
 		go addStudent(i, stuChan)
 	}
 
-	wg.Wait()
 	// N必须相等，否则堵塞(因为无法close channel, 所以不能用for range遍历)
 	for i := 0; i < N; i++ {
 		fmt.Printf("%#v\n", <-stuChan)
@@ -525,11 +520,12 @@ func addStudents(stuChan chan *Student) {
 		fmt.Printf("Add: %#v\n", newStu)
 		stuChan <- newStu
 	}
+	close(stuChan)
 }
 
 func readStudents(stuChan chan *Student) {
-	for {
-		fmt.Printf("%#v\n", <-stuChan)
+	for stu := range stuChan {
+		fmt.Printf("%#v\n", stu)
 		time.Sleep(time.Second)
 	}
 }
@@ -555,6 +551,7 @@ import (
 
 func Modify(i int, taskChn chan int, resultChn chan int) {
 	for v := range taskChn {
+		// taskChn的尺寸不断变化
 		fmt.Printf("routine: %d, len:%d\n", i, len(taskChn))
 		v *= 10
 		resultChn <- v
@@ -570,6 +567,7 @@ func main() {
 		for i := 0; i < N; i++ {
 			taskChn <- i
 		}
+		close(taskChn)
 	}()
 
 	for i := 0; i < 8; i++ {
@@ -586,3 +584,9 @@ func main() {
 }
 ```
 
+- 使用内置函数close进行关闭，chan关闭之后，for range遍历chan中已经存在的元素后结束
+- 使用内置函数close进行关闭，chan关闭之后，没有使用for range的写法需要使用，v, ok := <- ch进行判断chan是否关闭
+
+example: read-only channel
+
+```go
