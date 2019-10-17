@@ -1,10 +1,251 @@
 # Golang goroutine
 
+- [Golang goroutine](#golang-goroutine)
+	- [channel traverse](#channel-traverse)
+	- [others](#others)
+
 Process vs Thread vs Coroutine:
 - 进程是程序在操作系统中的一次执行过程，系统进行资源分配和调度的一个独立单位
 - 线程是进程的一个执行实体，是CPU调度和分派的基本单位，是比进程更小的能独立运行的基本单位
 - 一个进程可以创建和销毁多个线程；同一个进程中的多个线程之间可以并发执行
 - 协程：独立的栈空间，共享堆空间，调度由用户控制，类似用户级线程；一个线程上可以跑多个协程
+
+## channel traverse
+
+Method1: channel简单遍历(not recommended)
+- 读次数<=写次数: 正常
+- 读次数>写次数: 
+  - 无`close(ch)`: deadlock
+  - 有`close(ch)`: 多出的次数获取的值为0
+
+
+```go
+// 读次数<=写次数
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		// close(ch) //有无close(ch)无影响
+	}()
+
+	for i := 0; i < N; i++ {
+		fmt.Printf("%v, ", <-ch)
+	} //0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+}
+```
+
+```go
+// 读次数>写次数， 无close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+	}()
+
+	for i := 0; i < 2*N; i++ {
+		fmt.Printf("%v, ", <-ch)
+	} //deadlock
+}
+```
+
+```go
+// 读次数>写次数， 有close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	for i := 0; i < 2*N; i++ {
+		fmt.Printf("%v, ", <-ch)
+	} //0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+}
+```
+
+Method2: channel断言遍历
+- 无`close(ch)`: deadlock
+- 有`close(ch)`: 正常
+
+```go
+if value, ok := <-ch; ok {
+
+}
+// 如果channel中有数据， value 保存 <-ch 读到的数据。 ok 被设置为 true
+// 如果channel中没有数据，channel被close， value 保存 <-ch 读到的0数据。 ok 被设置为 false
+// 如果channel中没有数据，channel没被close， <-ch 堵塞
+```
+
+```go
+// 有close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	for {
+		if value, ok := <-ch; ok {
+			fmt.Printf("%v, ", value)
+		} else {
+			break
+		}
+	} // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+}
+```
+
+Method3: `for range`遍历
+- 无`close(ch)`: deadlock
+- 有`close(ch)`: 正常
+
+```go
+// 有close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	for v := range ch {
+		fmt.Printf("%v, ", v)
+	} // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+}
+```
+
+Method1~3都是子routine写，主routine读；如果都是子routine读写
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		// close(ch) // 不带close更好，带了之后会多出0
+	}()
+
+	go func() {
+		for i := 0; i < 2*N; i++ {
+			fmt.Printf("%v, ", <-ch)
+		}
+	}() // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+
+	time.Sleep(3 * time.Second)
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+	}()
+
+	go func() {
+		for {
+			if value, ok := <-ch; ok {
+				fmt.Printf("%d, ", value)
+			} else {
+				break
+			}
+		}
+	}() // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+
+	time.Sleep(3 * time.Second)
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+	}()
+
+	go func() {
+		for v := range ch {
+			fmt.Printf("%v, ", v)
+		}
+	}() // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+
+	time.Sleep(3 * time.Second)
+}
+```
+
+## others
 
 example: 主协程与次协程并发
 
@@ -136,7 +377,7 @@ func main() {
 
 	wg.Wait()
 
-	// close channel之后，不再向channel写入数据，可以用for range遍历
+	// close channel之后，不再向channel写入数据，主协程可以用for range遍历
 	for v := range stuChan {
 		fmt.Printf("%#v\n", v)
 	}
@@ -302,31 +543,6 @@ func main() {
 }
 ```
 
-example: 判断channel是否空
-
-```go
-package main
-
-import "fmt"
-
-func main() {
-	ch := make(chan int, 10)
-	for i := 0; i < 10; i++ {
-		ch <- i
-	}
-	close(ch)
-
-	for {
-		v, ok := <-ch
-		if !ok {
-			fmt.Println("fetched all")
-			break
-		}
-		fmt.Printf("%d, ", v)
-	}
-}
-```
-
 example: 两个channel
 
 ```go
@@ -354,7 +570,6 @@ func main() {
 		for i := 0; i < N; i++ {
 			taskChn <- i
 		}
-		close(taskChn) // taskChn不再写入，但可以读
 	}()
 
 	for i := 0; i < 8; i++ {
@@ -371,144 +586,3 @@ func main() {
 }
 ```
 
-example: channel简单遍历(not recommended)
-- 读次数<=写次数: 正常
-- 读次数>写次数: 
-  - 无`close(ch)`: deadlock
-  - 有`close(ch)`: 多出的次数获取的值为0
-
-
-```go
-// 读次数<=写次数
-package main
-
-import "fmt"
-
-func main() {
-	ch := make(chan int, 20)
-	N := 10
-
-	go func() {
-		for i := 0; i < N; i++ {
-			ch <- i
-		}
-		// close(ch) //有无close(ch)无影响
-	}()
-
-	for i := 0; i < N; i++ {
-		fmt.Printf("%v, ", <-ch)
-	} //0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-}
-```
-
-```go
-// 读次数>写次数， 无close(ch)
-package main
-
-import "fmt"
-
-func main() {
-	ch := make(chan int, 20)
-	N := 10
-
-	go func() {
-		for i := 0; i < N; i++ {
-			ch <- i
-		}
-	}()
-
-	for i := 0; i < 2*N; i++ {
-		fmt.Printf("%v, ", <-ch)
-	} //deadlock
-}
-```
-
-```go
-// 读次数>写次数， 有close(ch)
-package main
-
-import "fmt"
-
-func main() {
-	ch := make(chan int, 20)
-	N := 10
-
-	go func() {
-		for i := 0; i < N; i++ {
-			ch <- i
-		}
-		close(ch)
-	}()
-
-	for i := 0; i < 2*N; i++ {
-		fmt.Printf("%v, ", <-ch)
-	} //0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-}
-```
-
-example: channel断言遍历
-- 无`close(ch)`: deadlock
-- 有`close(ch)`: 正常
-
-```go
-if value, ok := <-ch; ok {
-
-}
-// 如果channel中有数据， value 保存 <-ch 读到的数据。 ok 被设置为 true
-// 如果channel中没有数据，channel被close， value 保存 <-ch 读到的0数据。 ok 被设置为 false
-// 如果channel中没有数据，channel没被close， <-ch 堵塞
-```
-
-```go
-// 有close(ch)
-package main
-
-import "fmt"
-
-func main() {
-	ch := make(chan int, 20)
-	N := 10
-
-	go func() {
-		for i := 0; i < N; i++ {
-			ch <- i
-		}
-		close(ch)
-	}()
-
-	for {
-		if value, ok := <-ch; ok {
-			fmt.Printf("%v, ", value)
-		} else {
-			break
-		}
-	} // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-}
-```
-
-example: `for range`遍历
-- 无`close(ch)`: deadlock
-- 有`close(ch)`: 正常
-
-```go
-// 有close(ch)
-package main
-
-import "fmt"
-
-func main() {
-	ch := make(chan int, 20)
-	N := 10
-
-	go func() {
-		for i := 0; i < N; i++ {
-			ch <- i
-		}
-		close(ch)
-	}()
-
-	for v := range ch {
-		fmt.Printf("%v, ", v)
-	} // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
-}
-```
