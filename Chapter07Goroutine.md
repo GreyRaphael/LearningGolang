@@ -371,3 +371,144 @@ func main() {
 }
 ```
 
+example: channel简单遍历(not recommended)
+- 读次数<=写次数: 正常
+- 读次数>写次数: 
+  - 无`close(ch)`: deadlock
+  - 有`close(ch)`: 多出的次数获取的值为0
+
+
+```go
+// 读次数<=写次数
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		// close(ch) //有无close(ch)无影响
+	}()
+
+	for i := 0; i < N; i++ {
+		fmt.Printf("%v, ", <-ch)
+	} //0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+}
+```
+
+```go
+// 读次数>写次数， 无close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+	}()
+
+	for i := 0; i < 2*N; i++ {
+		fmt.Printf("%v, ", <-ch)
+	} //deadlock
+}
+```
+
+```go
+// 读次数>写次数， 有close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	for i := 0; i < 2*N; i++ {
+		fmt.Printf("%v, ", <-ch)
+	} //0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+}
+```
+
+example: channel断言遍历
+- 无`close(ch)`: deadlock
+- 有`close(ch)`: 正常
+
+```go
+if value, ok := <-ch; ok {
+
+}
+// 如果channel中有数据， value 保存 <-ch 读到的数据。 ok 被设置为 true
+// 如果channel中没有数据，channel被close， value 保存 <-ch 读到的0数据。 ok 被设置为 false
+// 如果channel中没有数据，channel没被close， <-ch 堵塞
+```
+
+```go
+// 有close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	for {
+		if value, ok := <-ch; ok {
+			fmt.Printf("%v, ", value)
+		} else {
+			break
+		}
+	} // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+}
+```
+
+example: `for range`遍历
+- 无`close(ch)`: deadlock
+- 有`close(ch)`: 正常
+
+```go
+// 有close(ch)
+package main
+
+import "fmt"
+
+func main() {
+	ch := make(chan int, 20)
+	N := 10
+
+	go func() {
+		for i := 0; i < N; i++ {
+			ch <- i
+		}
+		close(ch)
+	}()
+
+	for v := range ch {
+		fmt.Printf("%v, ", v)
+	} // 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+}
+```
