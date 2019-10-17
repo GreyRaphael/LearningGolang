@@ -3,6 +3,7 @@
 - [Golang goroutine](#golang-goroutine)
 	- [channel traverse](#channel-traverse)
 	- [others](#others)
+	- [unit test](#unit-test)
 
 Process vs Thread vs Coroutine:
 - 进程是程序在操作系统中的一次执行过程，系统进行资源分配和调度的一个独立单位
@@ -669,6 +670,279 @@ func main() {
 }
 ```
 
-example: read-only channel
+example: read-only & write-only channel
 
 ```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+// write-only channel
+func sendData(ch chan<- int) {
+	for i := 0; i < 10; i++ {
+		ch <- i
+	}
+	close(ch)
+}
+
+// read-only channel
+func getData(ch <-chan int) {
+	for {
+		if v, ok := <-ch; ok {
+			fmt.Printf("%v, ", v)
+		} else {
+			break
+		}
+	}
+}
+
+func main() {
+	ch := make(chan int, 10)
+
+	go sendData(ch)
+	go getData(ch)
+
+	time.Sleep(time.Second)
+}
+```
+
+example: channel `select`
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	c1 := make(chan string)
+	c2 := make(chan string)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		c1 <- "one"
+	}()
+	go func() {
+		time.Sleep(2 * time.Second)
+		c2 <- "two"
+	}()
+forloop:
+	for {
+		select {
+		case msg1 := <-c1:
+			fmt.Println("received", msg1)
+		case msg2 := <-c2:
+			fmt.Println("received", msg2)
+			break forloop
+		default:
+			fmt.Println("not block")
+		}
+		time.Sleep(500 * time.Millisecond)
+	}
+}
+// not block
+// not block
+// received one
+// not block
+// received two
+```
+
+example: ticker
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	t := time.NewTicker(time.Second) // 每second触发一次
+	for v := range t.C {             // t.C本质是channel
+		fmt.Printf("%v\n", v.Format("2006/1/02 15:04:05"))
+	}
+}
+```
+
+example: timeout by `time.After`
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	ch1 := make(chan int, 10)
+	go func() {
+		time.Sleep(3 * time.Second)
+		ch1 <- 666
+	}()
+
+	select {
+	case v1 := <-ch1:
+		fmt.Printf("v1=%v\n", v1)
+	case <-time.After(time.Second): // 1s后执行，总共执行一次
+		fmt.Println("get data timeout")
+		break
+	}
+}
+```
+
+example: timeout by `time.NewTicker`
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func queryDb(ch chan int) {
+	time.Sleep(3 * time.Second)
+	ch <- 100
+}
+func main() {
+	ch := make(chan int)
+
+	go queryDb(ch)
+	t := time.NewTicker(time.Second)
+	select {
+	case v := <-ch:
+		fmt.Println("result", v)
+	case <-t.C:
+		fmt.Println("timeout")
+	}
+	// 用完ticker务必关闭, 防止内存泄漏
+	t.Stop()
+}
+```
+
+goroutine with panic: 如果某个goroutine panic了，而且这个goroutine 里面没有捕获(recover)，那么整个进程就会挂掉。所以，好的习惯是每当go产生一个goroutine，就需要写下recover
+
+example: goroutine with panic
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func calc() {
+
+	defer func() { //defer必须放置在最前面，才能捕获后面所有的panic，程序退出时执行defer
+		err := recover() //捕获goroutine错误
+		if err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	var p *int
+	*p = 100
+}
+
+func otherWork() {
+	for {
+		fmt.Println("doing other work")
+		time.Sleep(time.Second)
+	}
+}
+
+func main() {
+	go calc()
+	go otherWork()
+	time.Sleep(time.Second * 10)
+}
+```
+
+## unit test
+
+- 文件名必须以`_test.go`结尾
+- 使用`go test` or `go test -v`执行单元测试
+
+example: simple test
+
+```bash
+src/
+	project1/
+		main/
+			main.go
+			calc.go
+			calc_test.go
+```
+
+```go
+// main.go
+package main
+
+func main() {
+
+}
+```
+
+```go
+// calc.go
+package main
+
+func add(a, b int) int {
+	return a + b
+}
+
+func sub(a, b int) int {
+	return a - b
+}
+```
+
+```go
+// calc_test.go
+package main
+
+import (
+	"testing"
+)
+
+func TestAdd(t *testing.T) { //TestAdd必须大写的Test开头
+	result := add(2, 8) //测试add函数
+	if result != 10 {
+		t.Fatalf("add is not right") //致命错误记录
+		return
+	}
+
+	t.Logf("add is right") //记录一些常规信息
+}
+
+func TestSub(t *testing.T) {
+	result := sub(2, 8)
+	if result != -6 {
+		t.Fatalf("sub is not right")
+		return
+	}
+
+	t.Logf("sub is right")
+}
+```
+
+```bash
+Administrator@PC20180310 MINGW32 ~/Downloads/src/project1/main
+$ go test -v
+=== RUN   TestAdd
+--- PASS: TestAdd (0.00s)
+    calc_test.go:14: add is right
+=== RUN   TestSub
+--- PASS: TestSub (0.00s)
+    calc_test.go:24: sub is right
+PASS
+ok      _/C_/Users/Administrator/Downloads/src/project1/main    0.024s
+```
+
