@@ -880,6 +880,8 @@ src/
 			main.go
 			calc.go
 			calc_test.go
+			student.go
+			student_test.go
 ```
 
 ```go
@@ -933,6 +935,80 @@ func TestSub(t *testing.T) {
 }
 ```
 
+```go
+// student.go
+package main
+
+import (
+	"encoding/json"
+	"io/ioutil"
+)
+
+type Student struct {
+	Name string
+	Age  int
+}
+
+func (s *Student) Save() (err error) {
+	data, e := json.Marshal(s)
+	if e != nil {
+		return
+	}
+
+	err = ioutil.WriteFile("stu.txt", data, 0666)
+	return
+}
+
+func (s *Student) Load() (err error) {
+	data, e := ioutil.ReadFile("stu.txt")
+	if e != nil {
+		return
+	}
+	err = json.Unmarshal(data, s)
+	return
+}
+```
+
+```go
+// student_test.go
+package main
+
+import (
+	"testing"
+	"time"
+)
+
+func TestSave(t *testing.T) {
+	stu := &Student{"alpha", 66}
+	err := stu.Save()
+	if err != nil {
+		t.Fatalf("save file error")
+	}
+}
+
+func TestLoad(t *testing.T) {
+	stu1 := &Student{"alpha", 66}
+	err := stu1.Save()
+	if err != nil {
+		t.Fatalf("save file error")
+	}
+
+	stu2 := &Student{}
+	time.Sleep(10 * time.Second) // 中途修改文件，演示测试错误
+	err = stu2.Load()
+	if err != nil {
+		t.Fatalf("load file error")
+	}
+
+	if stu1.Name != stu2.Name {
+		t.Fatalf("name not match")
+	}
+	if stu1.Age != stu2.Age {
+		t.Fatalf("Age not match")
+	}
+}
+```
+
 ```bash
 Administrator@PC20180310 MINGW32 ~/Downloads/src/project1/main
 $ go test -v
@@ -942,7 +1018,12 @@ $ go test -v
 === RUN   TestSub
 --- PASS: TestSub (0.00s)
     calc_test.go:24: sub is right
-PASS
-ok      _/C_/Users/Administrator/Downloads/src/project1/main    0.024s
+=== RUN   TestSave
+--- PASS: TestSave (0.00s)
+=== RUN   TestLoad
+--- FAIL: TestLoad (10.00s)
+    student_test.go:34: Age not match
+FAIL
+exit status 1
+FAIL    _/C_/Users/Administrator/Downloads/src/project1/main    10.024s
 ```
-
