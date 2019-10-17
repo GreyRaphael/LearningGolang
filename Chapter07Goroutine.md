@@ -546,7 +546,45 @@ package main
 
 import (
 	"fmt"
-	"time"
+)
+
+func sendData(ch chan int, exitChn chan bool) {
+	for i := 0; i < 10; i++ {
+		ch <- i
+	}
+	close(ch)
+	exitChn <- true
+}
+
+func getData(ch chan int, exitChn chan bool) {
+	for v := range ch {
+		fmt.Printf("%d, ", v)
+	}
+	exitChn <- true
+}
+
+func main() {
+	ch := make(chan int, 10)
+
+	N := 2
+	// 完成信号
+	exitChn := make(chan bool, N)
+
+	go sendData(ch, exitChn)
+	go getData(ch, exitChn)
+
+	for i := 0; i < N; i++ {
+		// 两个操作都结束才退出
+		<-exitChn
+	}
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
 )
 
 func Modify(i int, taskChn chan int, resultChn chan int) {
@@ -574,18 +612,62 @@ func main() {
 		go Modify(i, taskChn, resultChn)
 	}
 
-	go func() {
-		for v := range resultChn {
-			fmt.Printf("%d, ", v)
-		}
-	}()
-
-	time.Sleep(5 * time.Second)
+	// 因为resultChn无法close, 所以只能用
+	for i := 0; i < N; i++ {
+		fmt.Printf("%v, ", <-resultChn)
+	}
 }
 ```
 
-- 使用内置函数close进行关闭，chan关闭之后，for range遍历chan中已经存在的元素后结束
-- 使用内置函数close进行关闭，chan关闭之后，没有使用for range的写法需要使用，v, ok := <- ch进行判断chan是否关闭
+example: 三个channel
+
+```go
+package main
+
+import (
+	"fmt"
+)
+
+func Modify(i int, taskChn chan int, resultChn chan int, exitChn chan int) {
+	for v := range taskChn {
+		v *= 10
+		resultChn <- v
+	}
+	exitChn <- i
+}
+
+func main() {
+	N := 100
+	taskChn := make(chan int, N)
+	resultChn := make(chan int, N)
+
+	Num := 8
+	exitChn := make(chan int, Num) // 退出信号
+
+	go func() {
+		for i := 0; i < N; i++ {
+			taskChn <- i
+		}
+		close(taskChn)
+	}()
+
+	for i := 0; i < Num; i++ {
+		go Modify(i, taskChn, resultChn, exitChn)
+	}
+
+	go func() {
+		for i := 0; i < Num; i++ {
+			fmt.Printf("routine-%v exit!\n", <-exitChn)
+		}
+		close(resultChn)
+	}()
+
+	// 只有resultChn close才能for range
+	for v := range resultChn {
+		fmt.Printf("%d, ", v)
+	}
+}
+```
 
 example: read-only channel
 
