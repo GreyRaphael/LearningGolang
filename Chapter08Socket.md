@@ -1,5 +1,11 @@
 # Golang Socket
 
+- [Golang Socket](#golang-socket)
+  - [tcp](#tcp)
+  - [redis with golang](#redis-with-golang)
+
+## tcp
+
 Server:
 - 监听端口
 - 接收客户端的链接
@@ -132,3 +138,14 @@ func main() {
 // ./main.ext > text.html
 ```
 
+## redis with golang
+
+- redis是个开源的高性能的key-value的内存数据库，可以把它当成远程的数据结构。
+- 支持的value类型非常多，比如string、list（链表）、set（集合）、
+hash表等等
+- redis性能非常高，单机能够达到15w qps，通常适合做缓存。
+
+```bash
+# use 3rd package
+go get -u github.com/go-redis/redis/v7
+```
