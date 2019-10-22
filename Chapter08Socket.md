@@ -3,6 +3,7 @@
 - [Golang Socket](#golang-socket)
 	- [tcp](#tcp)
 	- [redis with golang](#redis-with-golang)
+	- [http](#http)
 
 ## tcp
 
@@ -351,6 +352,75 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("%T, %#v\n", val, val) // string, "stu3"
+}
+```
+
+## http
+
+- Go原生支持http，`import("net/http")`
+- Go的http服务性能和nginx比较接近, 那么就可以少用一个nginx了(可能有多级nginx架构))
+- 几行代码就可以实现一个web服务
+
+example: http server
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
+func greet(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello World! %s", time.Now())
+}
+
+func login(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "this is login page")
+}
+
+func main() {
+	http.HandleFunc("/", greet)
+	http.HandleFunc("/login", login)
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		fmt.Println("http listen failed")
+	}
+	// test following urls
+	// localhost:8080/
+	// localhost:8080/xxx
+	// localhost:8080/login
+	// localhost:8080/login/xxx
+}
+```
+
+example: http client
+> 本质就是浏览器, 只能处理http不能处理https
+
+```go
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
+
+func main() {
+	res, err := http.Get("http://www.baidu.com/")
+	if err != nil {
+		fmt.Println("get err:", err)
+		return
+	}
+
+	data, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println("get data err:", err)
+		return
+	}
+
+	fmt.Println(string(data))
 }
 ```
 
