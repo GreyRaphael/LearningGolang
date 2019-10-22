@@ -424,3 +424,131 @@ func main() {
 }
 ```
 
+http request method:
+- get: in url, <8k
+- post: in body, no limit
+- put
+- delete
+- head
+
+example: head 请求
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+var url = []string{
+	"http://www.baidu.com",
+	"http://google.com",
+	"http://taobao.com",
+}
+
+func main() {
+
+	for _, v := range url {
+		resp, err := http.Head(v)
+		if err != nil {
+			fmt.Printf("head %s failed, err:%v\n", v, err)
+			continue
+		}
+
+		fmt.Printf("head succeed, status:%v\n", resp.Status)
+	}
+}
+```
+
+example: custom head 请求 with timeout
+
+```go
+package main
+
+import (
+	"fmt"
+	"net"
+	"net/http"
+	"time"
+)
+
+var url = []string{
+	"http://www.baidu.com",
+	"http://google.com",
+	"http://taobao.com",
+}
+
+func main() {
+
+	for _, v := range url {
+		client := http.Client{
+			Transport: &http.Transport{
+				Dial: func(network, addr string) (net.Conn, error) {
+					return net.DialTimeout(network, addr, 3*time.Second)
+				},
+			},
+		}
+
+		resp, err := client.Head(v)
+		if err != nil {
+			fmt.Printf("head %s failed, err:%v\n", v, err)
+			continue
+		}
+
+		fmt.Printf("head succeed, status:%v\n", resp.Status)
+	}
+}
+```
+
+常见状态码:
+- `http.StatusContinue = 100`: 服务器同意上传的时候返回100
+- `http.StatusOK = 200`
+- `http.StatusFound = 302`: 跳转
+- `http.StatusBadRequest = 400`: 非法请求，协议包有问题，服务器无法解析
+- `http.StatusUnauthorized = 401`: 权限无法通过
+- `http.StatusForbidden = 403`: 禁止访问
+- `http.StatusNotFound = 404`
+- `http.StatusInternalServerError = 500`
+- 502: nginx请求php, php挂了，返回502
+
+example: server处理form
+> 一般都是json来请求，这种场景几乎没有
+
+```go
+package main
+
+import (
+	"io"
+	"net/http"
+)
+
+const form = `<html><body><form action="#" method="post" name="bar">
+                    <input type="text" name="in"/>
+                    <input type="text" name="in"/>
+                     <input type="submit" value="Submit"/>
+             </form></html></body>`
+
+func SimpleServer(w http.ResponseWriter, request *http.Request) {
+	io.WriteString(w, "<h1>hello, world</h1>")
+}
+
+func FormServer(w http.ResponseWriter, request *http.Request) {
+	w.Header().Set("Content-Type", "text/html")
+	switch request.Method {
+	case "GET":
+		io.WriteString(w, form)
+	case "POST":
+		request.ParseForm()
+		io.WriteString(w, request.Form["in"][0])
+		io.WriteString(w, "\n")
+		io.WriteString(w, request.FormValue("in"))
+	}
+}
+func main() {
+	http.HandleFunc("/test1", SimpleServer)
+	http.HandleFunc("/test2", FormServer)
+	if err := http.ListenAndServe(":8088", nil); err != nil {
+	}
+}
+```
