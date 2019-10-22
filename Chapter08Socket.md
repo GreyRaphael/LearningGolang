@@ -1,8 +1,8 @@
 # Golang Socket
 
 - [Golang Socket](#golang-socket)
-  - [tcp](#tcp)
-  - [redis with golang](#redis-with-golang)
+	- [tcp](#tcp)
+	- [redis with golang](#redis-with-golang)
 
 ## tcp
 
@@ -145,7 +145,212 @@ func main() {
 hash表等等
 - redis性能非常高，单机能够达到15w qps，通常适合做缓存。
 
-```bash
-# use 3rd package
-go get -u github.com/go-redis/redis/v7
+[3rd go-redis](https://github.com/go-redis/redis): `go get -u github.com/go-redis/redis/v7`
+
+example: redis `Set`, `Get`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-redis/redis/v7"
+)
+
+func main() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  //use default DB
+	})
+	defer client.Close()
+
+	err := client.Set("key", 100, 0).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := client.Get("key").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T, %#v\n", val, val) // string, "100"
+
+	val2, err := client.Get("key2").Result()
+	if err == redis.Nil {
+		fmt.Println("key2 does not exist")
+	} else if err != nil {
+		panic(err)
+	} else {
+		fmt.Println("key2", val2)
+	}
+}
 ```
+
+example: redis `MSet`, `MGet`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-redis/redis/v7"
+)
+
+func main() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  //use default DB
+	})
+	defer client.Close()
+
+	err := client.MSet("name", "grey", "age", 22).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := client.MGet("name", "age").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T, %#v\n", val, val) // []interface {}, []interface {}{"grey", "22"}
+}
+```
+
+example: redis `expire`
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/go-redis/redis/v7"
+)
+
+func main() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  //use default DB
+	})
+	defer client.Close()
+
+	err := client.MSet("name", "grey", "age", 22).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := client.Expire("name", 10*time.Second).Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T, %#v\n", val, val) // bool, true
+}
+```
+
+exmaple: redis `HSet`, `HGet`, `HGetAll`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-redis/redis/v7"
+)
+
+func main() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  //use default DB
+	})
+	defer client.Close()
+
+	err := client.HSet("student1", "name", "chris").Err()
+	if err != nil {
+		panic(err)
+	}
+	err = client.HSet("student1", "age", 66).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := client.HGet("student1", "name").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T, %#v\n", val, val) // string "chris"
+}
+```
+
+example: redis `HMSet`, `HMGet`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-redis/redis/v7"
+)
+
+func main() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  //use default DB
+	})
+	defer client.Close()
+
+	// HSet, HMSet用于存object
+	err := client.HMSet("student1", map[string]interface{}{"name": "chris", "age": 66}).Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := client.HMGet("student1", "name", "age").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T, %#v\n", val, val) // []interface {}, []interface {}{"chris", "66"}
+}
+```
+
+example: redis list `LPush`, `LPop`
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/go-redis/redis/v7"
+)
+
+func main() {
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  //use default DB
+	})
+	defer client.Close()
+
+	err := client.LPush("students", "stu1", "stu2", "stu3").Err()
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := client.LPop("students").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%T, %#v\n", val, val) // string, "stu3"
+}
+```
+
