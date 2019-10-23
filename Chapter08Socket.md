@@ -5,6 +5,7 @@
 	- [redis with golang](#redis-with-golang)
 	- [http](#http)
 	- [template](#template)
+	- [MySQL with golang](#mysql-with-golang)
 
 ## tcp
 
@@ -953,4 +954,177 @@ func SimpleServer(w http.ResponseWriter, request *http.Request) {
 </body>
 
 </html>
+```
+
+## MySQL with golang
+
+prequisites:
+- `go get github.com/jmoiron/sqlx`
+- `go get -u github.com/go-sql-driver/mysql`
+
+example: initialize 2 tables
+
+```sql
+CREATE TABLE person (
+    user_id int primary key auto_increment,
+    username varchar(260),
+    sex varchar(260),
+    email varchar(260)
+);
+
+CREATE TABLE place (
+    country varchar(200),
+    city varchar(200),
+    telcode int
+)
+```
+
+example: simple insert data
+
+```go
+package main
+
+import (
+	"fmt"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
+func main() {
+	db, err := sqlx.Open("mysql", "root:password@tcp(localhost:3306)/Test")
+	if err != nil {
+		fmt.Println("connect db error", err)
+		return
+	}
+
+	// insert
+	for i := 0; i < 6; i++ {
+		_, err := db.Exec("insert into person(username, sex, email)values(?,?,?)", fmt.Sprintf("Stu%d", i), "male", fmt.Sprintf("stu%d@qq.com", i))
+		if err != nil {
+			fmt.Println("insert error")
+			return
+		}
+	}
+}
+```
+
+exmaple: insert
+
+```go
+package main
+
+import (
+	"fmt"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
+var Db *sqlx.DB
+
+func init() {
+	db, err := sqlx.Open("mysql", "root:password@tcp(localhost:3306)/Test")
+	if err != nil {
+		fmt.Println("connect db error", err)
+		return
+	}
+	Db = db
+}
+
+func main() {
+	r, err := Db.Exec("insert into person(username, sex, email)values(?,?,?)", "jane", "femlae", "jane@qq.com")
+	if err != nil {
+		fmt.Println("insert error")
+		return
+	}
+
+	id, err := r.LastInsertId()
+	if err != nil {
+		fmt.Println("exec failed", err)
+		return
+	}
+
+	fmt.Println("insert success:", id)
+}
+```
+
+example: select
+
+```go
+package main
+
+import (
+	"fmt"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
+)
+
+type Person struct {
+	UserID   int    `db:"user_id"`
+	Username string `db:"username"`
+	Sex      string `db:"sex"`
+	Email    string `db:"email"`
+}
+
+var Db *sqlx.DB
+
+func init() {
+	db, err := sqlx.Open("mysql", "root:password@tcp(localhost:3306)/Test")
+	if err != nil {
+		fmt.Println("connect db error", err)
+		return
+	}
+	Db = db
+}
+
+func main() {
+	var p []Person // must be a slice
+	err := Db.Select(&p, "select user_id, username, sex, email from person where user_id=?", 11)
+	if err != nil {
+		fmt.Println("select error", err)
+		return
+	}
+
+	fmt.Println("select success:", p) // select success: [{11 Stu4 male stu4@qq.com}]
+}
+```
+
+example: update
+
+```go
+func main() {
+	r, err := Db.Exec("update person set username=? where user_id=?", "moris", 10)
+	if err != nil {
+		fmt.Println("update error", err)
+		return
+	}
+
+	num, err := r.RowsAffected()
+	if err != nil {
+		fmt.Println("update error", err)
+		return
+	}
+	fmt.Println("updte", num) // update 1
+}
+```
+
+example: delete
+
+```go
+func main() {
+	r, err := Db.Exec("delete from person where user_id=?", 9)
+	if err != nil {
+		fmt.Println("delete error", err)
+		return
+	}
+
+	num, err := r.RowsAffected()
+	if err != nil {
+		fmt.Println("delete error", err)
+		return
+	}
+	fmt.Println("delete", num) // delete 1
+}
 ```
