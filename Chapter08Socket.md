@@ -395,8 +395,14 @@ func main() {
 }
 ```
 
-example: http client
-> 本质就是浏览器, 只能处理http不能处理https
+http request method:
+- get: in url, <8k
+- post: in body, no limit
+- put
+- delete
+- head
+
+example: get request
 
 ```go
 package main
@@ -408,30 +414,139 @@ import (
 )
 
 func main() {
-	res, err := http.Get("http://www.baidu.com/")
+	resp, err := http.Get("https://httpbin.org/get")
 	if err != nil {
-		fmt.Println("get err:", err)
-		return
+		panic(err)
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Println("get data err:", err)
-		return
+		panic(err)
 	}
 
-	fmt.Println(string(data))
+	fmt.Println(string(body))
 }
 ```
 
-http request method:
-- get: in url, <8k
-- post: in body, no limit
-- put
-- delete
-- head
+example: post requst
 
-example: head 请求
+```go
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+)
+
+func main() {
+	jsonData, err := json.Marshal(map[string]interface{}{
+		"name": "grey",
+		"age":  66,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := http.Post("https://httpbin.org/post", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(body))
+}
+```
+
+example: custom post request
+
+```go
+package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
+func main() {
+	jsonData, err := json.Marshal(map[string]interface{}{
+		"name": "grey",
+		"age":  66,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	client := http.Client{Timeout: time.Duration(3 * time.Second)}
+	request, err := http.NewRequest("POST", "https://httpbin.org/post", bytes.NewBuffer(jsonData))
+	request.Header.Set("Content-type", "application/json")
+	if err != nil {
+		panic(err)
+	}
+
+	resp, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(string(body))
+}
+```
+
+example: `postForm`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+)
+
+func main() {
+	formData := url.Values{
+		"name": {"grey", "moris"},
+		"age":  {"66"},
+	}
+
+	resp, err := http.PostForm("https://httpbin.org/post", formData)
+	if err != nil {
+		panic(err)
+	}
+
+	// body, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	// fmt.Println(string(body))
+
+	// decode data
+	result := map[string]interface{}{}
+	json.NewDecoder(resp.Body).Decode(&result)
+	fmt.Println(result["form"])
+}
+```
+
+example: head request
 
 ```go
 package main
@@ -488,6 +603,41 @@ func main() {
 					return net.DialTimeout(network, addr, 3*time.Second)
 				},
 			},
+		}
+
+		resp, err := client.Head(v)
+		if err != nil {
+			fmt.Printf("head %s failed, err:%v\n", v, err)
+			continue
+		}
+
+		fmt.Printf("head succeed, status:%v\n", resp.Status)
+	}
+}
+```
+
+example: head request with timeout simple
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
+
+var url = []string{
+	"http://www.baidu.com",
+	"http://google.com",
+	"http://taobao.com",
+}
+
+func main() {
+
+	for _, v := range url {
+		client := http.Client{
+			Timeout: time.Duration(3 * time.Second),
 		}
 
 		resp, err := client.Head(v)
