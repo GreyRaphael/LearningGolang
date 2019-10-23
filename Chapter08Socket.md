@@ -800,6 +800,16 @@ type Person struct {
 	Age  int
 }
 
+type myWriter struct {
+	data string
+}
+
+func (m *myWriter) Write(p []byte) (n int, err error) {
+	// implement io.Writer interface
+	m.data += string(p)
+	return len(p), nil
+}
+
 func SimpleServer(w http.ResponseWriter, request *http.Request) {
 	t, err := template.ParseFiles("index.html")
 	if err != nil {
@@ -811,6 +821,11 @@ func SimpleServer(w http.ResponseWriter, request *http.Request) {
 	if err = t.Execute(w, p); err != nil { // 替换template中的{{.FieldName}}
 		fmt.Println("execute error")
 	}
+
+	// dump to custom struct
+	myw := &myWriter{}
+	err = t.Execute(myw, p)
+	fmt.Printf("%#v\n", myw) // html string
 }
 
 func main() {
@@ -881,3 +896,61 @@ example: template with `if`
 - le 小于等于`{{if le .var1 .var2}} {{end}}`
 - gt 大于`{{if gt .var1 .var2}} {{end}}`
 - ge 大于等于`{{if ge .var1 .var2}} {{end}}`
+
+example: `{{with .Var}}   {{end}}`
+> with里面的`{{.}}`就是Var的值
+
+```html
+<!-- index.html -->
+<html>
+
+<head>
+</head>
+
+<body>
+    {{with .Name}}
+    <p>hello, old man, {{.}}</p>
+    {{end}}
+</body>
+
+</html>
+```
+
+example: `{{range}} {{end}}`
+
+```go
+// main.go
+func SimpleServer(w http.ResponseWriter, request *http.Request) {
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		fmt.Println("parse file err")
+		return
+	}
+
+	// many persons
+	p := []Person{Person{"grey", 16}, Person{"alpha", 22}}
+	if err = t.Execute(w, p); err != nil { 
+		fmt.Println("execute error")
+	}
+}
+```
+
+```html
+<!-- index.html -->
+<html>
+
+<head>
+</head>
+
+<body>
+    {{range .}}
+    {{if gt .Age 18}}
+    <p>hello, old man, {{.Name}}</p>
+    {{else}}
+    <p>hello,young man, {{.Name}}</p>
+    {{end}}
+    {{end}}
+</body>
+
+</html>
+```
