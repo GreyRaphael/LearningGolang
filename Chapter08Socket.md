@@ -4,6 +4,7 @@
 	- [tcp](#tcp)
 	- [redis with golang](#redis-with-golang)
 	- [http](#http)
+	- [template](#template)
 
 ## tcp
 
@@ -758,3 +759,125 @@ func FormServer(w http.ResponseWriter, request *http.Request) {
 }
 ```
 
+## template
+
+```bash
+src/
+	project1/
+		main/
+			main.go
+			index.html
+```
+
+```html
+<!-- index.html -->
+<html>
+
+<head>
+    <title>Document</title>
+</head>
+
+<body>
+    <p> hello, {{.Name}}</p>
+    <p> {{.Age}}</p>
+</body>
+
+</html>
+```
+
+```go
+// main.go
+package main
+
+import (
+	"fmt"
+	"net/http"
+	"text/template"
+)
+
+type Person struct {
+	Name string
+	Age  int
+}
+
+func SimpleServer(w http.ResponseWriter, request *http.Request) {
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		fmt.Println("parse file err")
+		return
+	}
+
+	p := &Person{"grey", 22}
+	if err = t.Execute(w, p); err != nil { // 替换template中的{{.FieldName}}
+		fmt.Println("execute error")
+	}
+}
+
+func main() {
+	http.HandleFunc("/temp1", SimpleServer)
+	if err := http.ListenAndServe(":8088", nil); err != nil {
+		fmt.Println("server crash")
+	}
+}
+```
+
+```go
+// print to console
+package main
+
+import (
+	"fmt"
+	"os"
+	"text/template"
+)
+
+type Person struct {
+	Name string
+	Age  int
+}
+
+func main() {
+	t, err := template.ParseFiles("index.html")
+	if err != nil {
+		fmt.Println("parse file err:", err)
+		return
+	}
+
+	p := Person{"grey", 33}
+	if err := t.Execute(os.Stdout, p); err != nil {
+		fmt.Println("There was an error:", err.Error())
+	}
+}
+```
+
+example: template with `if`
+
+```html
+<!-- index.html -->
+<html>
+
+<head>
+</head>
+
+<body>
+    This is:{{.}}
+	<!-- {{.}}表示这个对象 -->
+    {{if gt .Age 18}}
+    <p>hello, old man, {{.Name}}</p>
+    {{else}}
+    <p>hello,young man, {{.Name}}</p>
+    {{end}}
+</body>
+
+</html>
+```
+
+- not 非`{{if not .condition}} {{end}}`
+- and 与`{{if and .condition1 .condition2}} {{end}}`
+- or 或`{{if or .condition1 .condition2}} {{end}}`
+- eq 等于`{{if eq .var1 .var2}} {{end}}`
+- ne 不等于`{{if ne .var1 .var2}} {{end}}`
+- lt 小于 `{{if lt .var1 .var2}} {{end}}`
+- le 小于等于`{{if le .var1 .var2}} {{end}}`
+- gt 大于`{{if gt .var1 .var2}} {{end}}`
+- ge 大于等于`{{if ge .var1 .var2}} {{end}}`
