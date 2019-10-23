@@ -513,7 +513,8 @@ func main() {
 - 502: nginx请求php, php挂了，返回502
 
 example: server处理form
-> 一般都是json来请求，这种场景几乎没有
+> 一般都是browser发送json, 然后golang server处理json, 最后返回broswer json;  
+> 这种场景已经很少了
 
 ```go
 package main
