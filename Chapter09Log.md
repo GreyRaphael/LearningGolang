@@ -3,6 +3,7 @@
 - [Golang log](#golang-log)
   - [Kafka](#kafka)
   - [zookeeper](#zookeeper)
+  - [LogAgent](#logagent)
 
 Problems:
 - 每个系统都有日志，当系统出现问题时，需要通过日志解决问题; 日志的内容可以被收集用于数据分析;
@@ -56,4 +57,11 @@ Custom architecture:
   - Zookeeper是强一致的
   - 多个客户端同时在Zookeeper上创建相同znode，只有一个创建成功
 
+## LogAgent
+
+LogAgent设计:
+- Kafka
+- config
+- tailf
+- log
 
