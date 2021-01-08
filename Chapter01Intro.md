@@ -3,20 +3,27 @@
 - [Golang Introduction](#golang-introduction)
 	- [Go Features](#go-features)
 	- [Go package](#go-package)
+	- [go main](#go-main)
 
 ## Go Features
 
+go主要应对三个问题
+- 多核硬件架构
+- 超大规模分布式计算集群
+- web模式导致的开发规模和更新速度
+
+Some Features:
 1. gc
    1. 只需要new分配内存，不需要释放
-   1. 内存自动回收，再也不需要开发人员管理内存
-1. 天然并发
+   2. 内存自动回收，再也不需要开发人员管理内存
+2. 天然并发
    1. 从语言层面支持并发，非常简单
-   1. goroutine，轻量级线程(本质是协程映射到物理线程上,但比操作系统的线程轻量)，创建成千上万个goroutine成为可能(而创建成千上万个线程，程序会被OS kill)，能够充分利用多核CPU
-   1. 基于CSP（Communicating Sequential Process）模型实现
-1. channel
+   2. goroutine，轻量级线程(本质是协程映射到物理线程上,但比操作系统的线程轻量)，创建成千上万个goroutine成为可能(而创建成千上万个线程，程序会被OS kill)，能够充分利用多核CPU
+   3. 基于CSP（Communicating Sequential Process）模型实现
+3. channel
    1. 多个goroutine之间通过channel进行通信, channel类似Unix/Linux下的pipe
-   1. channel支持任何数据类型
-1. 多返回值
+   2. channel支持任何数据类型
+4. 多返回值
 
 example: simple example
 
@@ -273,6 +280,11 @@ func main() {
 - main包是用来生成可执行文件，每个程序只有一个main包
 - 包的主要用途是提高代码的可复用性
 
+应用程序入口:
+- 必须是`package main`, 表明代码所在的package
+- 必须是`func main()`
+- 文件名不一定是`main.go`
+
 ```bash
 # golang标准package目录
 # GOPATH
@@ -378,5 +390,42 @@ func main() {
 	fmt.Printf("%d\n", 10)
 	fmt.Printf("%x\n", 10)
 	fmt.Printf("%.2f", 12.36)
+}
+```
+
+## go main
+
+Go中的main不支持任何返回值，通过`os.Exit()`来返回状态
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main(){
+	fmt.Println("hello, go")
+	// os.Exit(0)
+	os.Exit(-1)
+}
+```
+
+Go中的main不支持传入参数，通过`os.Args`获取命令行参数
+
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+)
+
+func main(){
+	fmt.Println(os.Args)
+	if len(os.Args)>1{
+		fmt.Println("Arg1=", os.Args[1])
+	}
 }
 ```
