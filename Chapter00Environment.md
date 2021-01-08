@@ -1,5 +1,11 @@
 # Go Environment
 
+Best Method to install gotools
+- `go env -w GO111MODULE=on`
+- `go env -w GOPROXY=https://goproxy.cn,direct`
+- install vscode with go extention
+- vscode notify gotools installation "Install All"
+
 Golang in Linux:
 1. FQ
 2. download *.tar.gz from https://golang.org/dl/ and extract
