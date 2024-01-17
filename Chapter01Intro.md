@@ -3,7 +3,6 @@
 - [Golang Introduction](#golang-introduction)
 	- [Go Features](#go-features)
 	- [Go package](#go-package)
-	- [go main](#go-main)
 
 ## Go Features
 
@@ -196,10 +195,6 @@ func main() {
 }
 ```
 
-trick: 格式化代码
-- `gofmt test.go`: 格式化test.go文件，并在terminal中显示，文件并没有改变
-- `gofmt -w test.go`: 格式化test.go文件，并写入文件
-
 example: 主routine从次routine中获取数据，并且channel是全局变量(不推荐)
 
 ```go
@@ -271,14 +266,11 @@ func main() {
 }
 ```
 
-编译为二进制文件: 当前工作目录下 `go build`
 
 ## Go package
 
 - 和python一样，把相同功能的代码放到一个目录，称之为包
 - 包可以被其他包引用
-- main包是用来生成可执行文件，每个程序只有一个main包
-- 包的主要用途是提高代码的可复用性
 
 应用程序入口:
 - 必须是`package main`, 表明代码所在的package
@@ -374,58 +366,5 @@ func main() {
 	go calc.Add(100, 200, pipe)
 	sum := <-pipe
 	fmt.Println(sum)
-}
-```
-
-example: simple string format
-
-```go
-package main
-
-import "fmt"
-
-func main() {
-	fmt.Printf("hello, grey\n")
-	fmt.Printf("%b\n", 10)
-	fmt.Printf("%d\n", 10)
-	fmt.Printf("%x\n", 10)
-	fmt.Printf("%.2f", 12.36)
-}
-```
-
-## go main
-
-Go中的main不支持任何返回值，通过`os.Exit()`来返回状态
-
-```go
-package main
-
-import (
-	"fmt"
-	"os"
-)
-
-func main(){
-	fmt.Println("hello, go")
-	// os.Exit(0)
-	os.Exit(-1)
-}
-```
-
-Go中的main不支持传入参数，通过`os.Args`获取命令行参数
-
-```go
-package main
-
-import (
-	"fmt"
-	"os"
-)
-
-func main(){
-	fmt.Println(os.Args)
-	if len(os.Args)>1{
-		fmt.Println("Arg1=", os.Args[1])
-	}
 }
 ```
